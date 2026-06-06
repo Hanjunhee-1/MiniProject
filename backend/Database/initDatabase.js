@@ -1,0 +1,49 @@
+const pool = require("./dbConnection");
+
+async function initDatabase() {
+    const dbName = process.env.DB_NAME;
+
+    // db 가 없을 경우 생성
+    await pool.query(
+        `create database if not exists \`${dbName}\``
+    );
+
+    console.log(`✅ Database ${dbName} is ready`);
+
+    // db 선택
+    await pool.query(`use \`${dbName}\``);
+
+    // 테이블 생성
+    await pool.query(`
+        create table if not exists users (
+            id int primary key auto_increment,
+            name varchar(255) not null,
+            email varchar(255) not null unique
+        )
+    `);
+
+    await pool.query(`
+        create table if not exists post_it (
+            id int primary key auto_increment,
+            created_at datetime not null,
+            user_id int not null,
+            foreign key (user_id) references users(id)
+        )
+    `);
+
+    await pool.query(`
+        create table if not exists todos (
+            id int primary key auto_increment,
+            content text not null,
+            created_at datetime not null,
+            completed_at datetime,
+            duration varchar(3) not null,
+            due_date datetime, 
+            elapsed_date varchar(3) not null,
+            post_it_id int not null,
+            foreign key (post_it_id) references post_it(id)
+        )
+    `);
+}
+
+module.exports = initDatabase;
