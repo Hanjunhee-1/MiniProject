@@ -1,3 +1,5 @@
+require("dotenv").config();
+
 const express = require("express");
 const cors = require("cors");
 const prefix = require("./Utils/prefix");
@@ -23,6 +25,6 @@ app.use(prefix.AUTH, routers[0]);
 
 // todo
 
-app.listen(8000, () => {
-    console.log("Server is running on port 8000");
+app.listen(process.env.PORT || 8000, () => {
+    console.log(`Server is running on port ${process.env.PORT}`);
 });
