@@ -25,7 +25,7 @@ async function initDatabase() {
     await pool.query(`
         create table if not exists post_it (
             id int primary key auto_increment,
-            created_at datetime not null,
+            created_at datetime default current_timestamp,
             user_id int not null,
             foreign key (user_id) references users(id)
         )
@@ -35,7 +35,7 @@ async function initDatabase() {
         create table if not exists todos (
             id int primary key auto_increment,
             content text not null,
-            created_at datetime not null,
+            created_at datetime default current_timestamp,
             completed_at datetime,
             duration varchar(3) not null,
             due_date datetime, 
