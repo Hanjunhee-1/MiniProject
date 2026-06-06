@@ -2,10 +2,8 @@ const express = require("express");
 
 const router = express.Router();
 
-const prefix = require("../Utils/prefix");
+const authController = require("../Controller/authController");
 
-router.get("/", (req, res) => {
-    res.send(`현재 ${prefix.AUTH} 에 있습니다.`);
-})
+router.post("/", authController.googleLogin);
 
 module.exports = router;
