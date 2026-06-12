@@ -8,7 +8,8 @@ const initDB = require("./Database/initDatabase");
 const app = express();
 
 const routers = [
-    require("./Route/authRoutes")
+    require("./Route/authRoutes"),
+    require("./Route/postRoutes")
 ]
 
 app.use(cors());
@@ -75,6 +76,7 @@ app.get("/", (req, res) => {
 app.use(prefix.AUTH, routers[0]);
 
 // post-it
+app.use(prefix.POST_IT, routers[1]);
 
 // todo
 
