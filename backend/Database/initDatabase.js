@@ -23,7 +23,7 @@ async function initDatabase() {
     `);
 
     await pool.query(`
-        create table if not exists post_it (
+        create table if not exists post_its (
             id int primary key auto_increment,
             created_at datetime default current_timestamp,
             user_id int not null,
@@ -41,7 +41,7 @@ async function initDatabase() {
             due_date datetime, 
             elapsed_date varchar(3) not null,
             post_it_id int not null,
-            foreign key (post_it_id) references post_it(id)
+            foreign key (post_it_id) references post_its(id)
         )
     `);
 }
