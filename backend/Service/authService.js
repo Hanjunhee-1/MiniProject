@@ -32,6 +32,10 @@ const authService = {
         // 가입이 되어있지 않다면 자동으로 회원가입
         if (!user) {
             user = await userRepository.create(name, email);
+
+            /**
+             * 최초 회원가입 시에 당일의 post-it 을 생성하는 로직 필요.
+             */
         }
 
         const token = jwt.sign(
