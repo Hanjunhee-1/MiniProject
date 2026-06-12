@@ -1,0 +1,45 @@
+const pool = require("../Database/dbConnection");
+const Post_it = require("../Model/post_it");
+
+const postRepository = {
+    async create(user_id) {
+        const [result] = await pool.query(
+            "INSERT INTO post_its (user_id) VALUES (?)",
+            [user_id]
+        );
+        return new Post_it({ id: result.insertId, created_at: new Date(), user_id });
+    },
+
+    async findByUserId(user_id, page = 1, limit = 8) {
+        const offset = (page - 1) * limit;
+        const [rows] = await pool.query(
+            "SELECT * FROM post_its WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            [user_id, limit, offset]
+        );
+        const [countRows] = await pool.query(
+            "SELECT COUNT(*) as count FROM post_its WHERE user_id = ?",
+            [user_id]
+        );
+        return {
+            items: rows.map(Post_it.fromRow),
+            count: countRows[0].count
+        };
+    },
+
+    async findAll(page = 1, limit = 8) {
+        const offset = (page - 1) * limit;
+        const [rows] = await pool.query(
+            "SELECT * FROM post_its ORDER BY created_at DESC LIMIT ? OFFSET ?",
+            [limit, offset]
+        );
+        const [countRows] = await pool.query(
+            "SELECT COUNT(*) as count FROM post_its"
+        );
+        return {
+            items: rows.map(Post_it.fromRow),
+            count: countRows[0].count
+        };
+    }
+};
+
+module.exports = postRepository;
