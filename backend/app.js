@@ -9,7 +9,8 @@ const app = express();
 
 const routers = [
     require("./Route/authRoutes"),
-    require("./Route/postRoutes")
+    require("./Route/postRoutes"),
+    require("./Route/todoRoutes")
 ]
 
 app.use(cors());
@@ -79,6 +80,7 @@ app.use(prefix.AUTH, routers[0]);
 app.use(prefix.POST_IT, routers[1]);
 
 // todo
+app.use(prefix.TODO, routers[2]);
 
 // DB 연결 및 서버 가동
 const startServer = async () => {
