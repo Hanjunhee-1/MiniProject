@@ -22,6 +22,45 @@ const postController = {
                 error: error.message
             });
         }
+    },
+
+    /**
+     * 이 아래 코드부터는 todo 와 관련되어있음.
+     */
+    async getTodos(req, res) {
+        try {
+            const { postId } = req.params;
+            const todos = await postService.getTodos(postId);
+            res.status(200).json({
+                success: true,
+                todos
+            });
+        } catch (error) {
+            console.error("Error during getTodos:", error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
+    },
+
+    async createTodo(req, res) {
+        try {
+            const { id: user_id } = req.user;
+            const { postId } = req.params;
+            const { content, due_date } = req.body;
+            const todo = await postService.createTodo(content, due_date, postId, user_id);
+            res.status(201).json({
+                success: true,
+                todo
+            });
+        } catch (error) {
+            console.error("Error during createTodo:", error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
     }
 };
 
