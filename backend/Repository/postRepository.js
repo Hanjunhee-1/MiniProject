@@ -10,6 +10,14 @@ const postRepository = {
         return new Post_it({ id: result.insertId, created_at: new Date(), user_id });
     },
 
+    async findById(post_it_id) {
+        const [rows] = await pool.query(
+            "SELECT * FROM post_its WHERE id = ?",
+            [post_it_id]
+        );
+        return rows.length ? Post_it.fromRow(rows[0]) : null;
+    },
+
     async findByUserId(user_id, page = 1, limit = 8) {
         const offset = (page - 1) * limit;
         const [rows] = await pool.query(
