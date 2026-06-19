@@ -37,9 +37,9 @@ async function initDatabase() {
             content text not null,
             created_at datetime default current_timestamp,
             completed_at datetime,
-            duration varchar(3) not null,
+            duration varchar(3),
             due_date datetime, 
-            elapsed_date varchar(3) not null,
+            elapsed_date varchar(3),
             post_it_id int not null,
             foreign key (post_it_id) references post_its(id)
         )
