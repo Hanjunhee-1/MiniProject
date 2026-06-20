@@ -4,6 +4,7 @@ const express = require("express");
 const cors = require("cors");
 const prefix = require("./Utils/prefix");
 const initDB = require("./Database/initDatabase");
+const { startPostItScheduler } = require("./Scheduler/postItScheduler");
 
 const app = express();
 
@@ -83,6 +84,9 @@ const startServer = async () => {
     try {
         // DB 연결 완료될 때까지 대기
         await initDB();
+
+        // 포스트잇 및 미완료 투두 이관 스케줄러 자동 실행
+        startPostItScheduler();
 
         app.listen(process.env.PORT || 8000, () => {
             console.log(`Server is running on port ${process.env.PORT}`);
