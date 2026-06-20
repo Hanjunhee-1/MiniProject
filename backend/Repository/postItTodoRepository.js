@@ -53,3 +53,5 @@ const postItTodoRepository = {
         return result.affectedRows;
     }
 }
+
+module.exports = postItTodoRepository;
