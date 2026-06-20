@@ -40,10 +40,10 @@ const todoRepository = {
         return result.affectedRows > 0;
     },
 
-    async updateCompletedAt(todo_id, completed_at) {
+    async updateCompletedAt(todo_id, completed_at, duration) {
         await pool.query(
-            "UPDATE todos SET completed_at = ? WHERE id = ?",
-            [completed_at, todo_id]
+            "UPDATE todos SET completed_at = ?, duration = ? WHERE id = ?",
+            [completed_at, duration, todo_id]
         );
         return await this.findById(todo_id);
     },
