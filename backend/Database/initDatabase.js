@@ -51,6 +51,7 @@ async function initDatabase() {
             id int primary key auto_increment,
             post_it_id int not null,
             todo_id int not null,
+            CONSTRAINT uk_post_it_todo UNIQUE (post_it_id, todo_id),
             foreign key (post_it_id) references post_its(id),
             foreign key (todo_id) references todos(id)
         )    
