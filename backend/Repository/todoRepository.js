@@ -3,14 +3,11 @@ const Todo = require("../Model/todo");
 
 const todoRepository = {
     async create(content, due_date) {
-        /**
-         * 기타 다른 필드에 대해서도 값을 설정해주는 작업이 필요함.
-         */
         const [result] = await pool.query(
-            "INSERT INTO todos (content, due_date) VALUES(?,?)",
+            "INSERT INTO todos (content, due_date, elapsed_date) VALUES(?,?, '0')",
             [content, due_date]
         );
-        return new Todo({ id: result.insertId, created_at: new Date(), content, due_date });
+        return new Todo({ id: result.insertId, created_at: new Date(), content, due_date, elapsed_date: "0" });
     },
 
     async findById(todo_id) {
@@ -43,12 +40,19 @@ const todoRepository = {
         return result.affectedRows > 0;
     },
 
-    async updateCompletedAt(todo_id, completed_at) {
+    async updateCompletedAt(todo_id, completed_at, duration) {
         await pool.query(
-            "UPDATE todos SET completed_at = ? WHERE id = ?",
-            [completed_at, todo_id]
+            "UPDATE todos SET completed_at = ?, duration = ? WHERE id = ?",
+            [completed_at, duration, todo_id]
         );
         return await this.findById(todo_id);
+    },
+
+    async incrementElapsedDays() {
+        const [result] = await pool.query(
+            "UPDATE todos SET elapsed_date = CAST(CAST(COALESCE(elapsed_date, '0') AS UNSIGNED) + 1 AS CHAR) WHERE completed_at IS NULL"
+        );
+        return result.affectedRows;
     }
 };
 
