@@ -26,7 +26,9 @@ async function initDatabase() {
     await pool.query(`
         create table if not exists post_its (
             id int primary key auto_increment,
-            created_at datetime default current_timestamp
+            created_at datetime default current_timestamp,
+            user_id int not null,
+            foreign key (user_id) references users(id)
         )
     `);
 
