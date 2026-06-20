@@ -30,6 +30,14 @@ const userRepository = {
             [id]
         );
         return User.fromRow(rows[0]);
+    },
+
+    // 4. 전체 사용자 조회
+    async findAll() {
+        const [rows] = await pool.query(
+            "SELECT * FROM users"
+        );
+        return rows.map(User.fromRow);
     }
 };
 
