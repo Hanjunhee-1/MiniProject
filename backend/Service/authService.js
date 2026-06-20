@@ -11,6 +11,7 @@ const client = new OAuth2Client(
 );
 
 const userRepository = require("../Repository/userRepository");
+const postRepository = require("../Repository/postRepository");
 
 const authService = {
     async googleLogin(idToken) {
@@ -34,8 +35,9 @@ const authService = {
             user = await userRepository.create(name, email);
 
             /**
-             * 최초 회원가입 시에 당일의 post-it 을 생성하는 로직 필요.
+             * 최초 회원가입 시에 당일의 post-it 을 자동생성하는 로직.
              */
+            const postit = await postRepository.create(user.id);
         }
 
         const token = jwt.sign(
