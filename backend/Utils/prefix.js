@@ -2,8 +2,7 @@
 
 const prefix = {
     AUTH: "/auth",
-    POST_IT: "/post-its",
-    TODO: "/todos"
+    POST_IT: "/post-its"
 }
 
 module.exports = prefix;
