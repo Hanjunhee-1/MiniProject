@@ -78,6 +78,33 @@ const postController = {
                 message: "Todo not found or unauthorized"
             });
         }
+    },
+
+    async completeTodo(req, res) {
+        try {
+            const { postId, todoId } = req.params;
+            const { isCompleted } = req.body;
+            const { id: user_id } = req.user;
+
+            const todo = await postService.completeTodo(postId, todoId, isCompleted, user_id);
+            if (todo) {
+                res.status(200).json({
+                    success: true,
+                    todo
+                });
+            } else {
+                res.status(404).json({
+                    success: false,
+                    message: "Todo not found or unauthorized"
+                });
+            }
+        } catch (error) {
+            console.error("Error during completeTodo:", error);
+            res.status(500).json({
+                success: false,
+                error: error.message
+            });
+        }
     }
 };
 

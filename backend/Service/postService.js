@@ -61,6 +61,34 @@ const postService = {
         }
 
         return true;
+    },
+
+    async completeTodo(post_it_id, todo_id, isCompleted, user_id) {
+        const post_it = await postRepository.findById(post_it_id);
+        if (!post_it || Number(post_it.user_id) !== Number(user_id)) {
+            return null;
+        }
+
+        const postItTodoRelation = await postItTodoRepository.findById(post_it_id, todo_id);
+        if (!postItTodoRelation) {
+            return null;
+        }
+
+        let completed_at = null;
+        if (isCompleted) {
+            const offset = 9 * 60 * 60 * 1000;
+            const now = new Date();
+            const kstDate = new Date(now.getTime() + offset);
+            const year = kstDate.getUTCFullYear();
+            const month = String(kstDate.getUTCMonth() + 1).padStart(2, '0');
+            const day = String(kstDate.getUTCDate()).padStart(2, '0');
+            const hours = String(kstDate.getUTCHours()).padStart(2, '0');
+            const minutes = String(kstDate.getUTCMinutes()).padStart(2, '0');
+            const seconds = String(kstDate.getUTCSeconds()).padStart(2, '0');
+            completed_at = `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
+        }
+
+        return await todoRepository.updateCompletedAt(todo_id, completed_at);
     }
 };
 
