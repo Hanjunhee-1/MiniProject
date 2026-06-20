@@ -41,6 +41,27 @@ const postService = {
 
         return todo;
     },
+
+    async deleteTodo(post_it_id, todo_id, user_id) {
+        const post_it = await postRepository.findById(post_it_id);
+        if (!post_it || Number(post_it.user_id) !== Number(user_id)) {
+            return false;
+        }
+        const postItTodoRelation = await postItTodoRepository.findById(post_it_id, todo_id);
+        if (!postItTodoRelation) {
+            return false;
+        }
+
+        await postItTodoRepository.delete(post_it_id, todo_id);
+
+        const remainingRelations = await postItTodoRepository.findByTodoId(todo_id);
+
+        if (!remainingRelations || remainingRelations.length === 0) {
+            await todoRepository.deleteById(todo_id);
+        }
+
+        return true;
+    }
 };
 
 module.exports = postService;
