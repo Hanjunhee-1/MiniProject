@@ -61,6 +61,23 @@ const postController = {
                 error: error.message
             });
         }
+    },
+
+    async deleteTodo(req, res) {
+        const { postId, todoId } = req.params;
+        const { id: user_id } = req.user;
+        const result = await postService.deleteTodo(postId, todoId, user_id);
+        if (result) {
+            res.status(200).json({
+                success: true,
+                message: "Todo deleted successfully"
+            });
+        } else {
+            res.status(404).json({
+                success: false,
+                message: "Todo not found or unauthorized"
+            });
+        }
     }
 };
 
