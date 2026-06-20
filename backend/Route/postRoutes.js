@@ -10,6 +10,7 @@ const router = express.Router();
 router.get("/", authMiddleware, postController.getPostIts);
 router.get("/:postId", authMiddleware, postController.getTodos);
 router.post("/:postId", authMiddleware, postController.createTodo);
+router.delete("/:postId/todos/:todoId", authMiddleware, postController.deleteTodo);
 
 
 module.exports = router;
