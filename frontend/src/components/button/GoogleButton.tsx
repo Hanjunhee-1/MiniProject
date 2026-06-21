@@ -7,7 +7,7 @@ type GoogleButtonProps = {
 
 export default function GoogleButton({ onClick }: GoogleButtonProps) {
     return (
-        <BaseButton onClick={onClick} className="w-fit">
+        <BaseButton onClick={onClick}>
             <FcGoogle size={30} />
         </BaseButton>
     )
