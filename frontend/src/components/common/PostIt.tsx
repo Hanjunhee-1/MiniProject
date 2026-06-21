@@ -1,5 +1,4 @@
 import React from "react";
-import GoogleButton from "../button/GoogleButton";
 
 export type PostItColor = "yellow" | "pink" | "blue" | "green" | "purple";
 
@@ -13,7 +12,6 @@ interface PostItProps {
   title: string;
   date?: string;
   isMain?: boolean;
-  onGoogleLogin?: () => void;
   onClick?: () => void;
   color?: PostItColor;
   previewTodos?: PreviewTodo[];
@@ -64,7 +62,6 @@ export default function PostIt({
   title,
   date,
   isMain = false,
-  onGoogleLogin,
   onClick,
   color = "yellow",
   previewTodos = []
@@ -91,12 +88,12 @@ export default function PostIt({
         rounded-sm
       `}
     >
-      {/* 3D Fold Corner */}
-      <div className="fold-flap" />
+      {/* 3D Fold Corner - Only for board post-its */}
+      {!isMain && <div className="fold-flap" />}
 
       {/* Header */}
       <div className="w-full text-center border-b border-black/10 pb-1">
-        <h3 className={`font-bold ${isMain ? "text-2xl mt-2" : "text-lg"} leading-tight tracking-wide truncate`}>
+        <h3 className={`font-bold ${isMain ? "text-3xl mt-4" : "text-lg"} leading-tight tracking-wide truncate`}>
           {title}
         </h3>
       </div>
@@ -104,14 +101,13 @@ export default function PostIt({
       {/* Body Content */}
       <div className="flex-1 flex flex-col justify-center py-2 relative overflow-hidden">
         {isMain ? (
-          <div className="text-center px-2 flex flex-col items-center justify-center gap-4">
-            <p className="text-base text-black/60 font-medium leading-relaxed">
-              💡 할일 관리를 시작하려면<br />
-              마우스를 올려 로그인을 해주세요!
+          <div className="text-center px-2 flex flex-col items-center justify-center gap-6 mt-4">
+            <p className="text-lg text-black/60 font-semibold leading-relaxed">
+              💡 TAP TO PEEL
             </p>
             <div className="w-full flex justify-center py-1">
-              <span className="text-sm border border-dashed border-black/30 rounded px-2 py-0.5 text-black/50 animate-pulse">
-                이곳에 마우스를 올리세요
+              <span className="text-sm border border-dashed border-black/35 rounded-full px-3 py-1 text-black/55 animate-pulse font-bold">
+                HOVER TO OPEN
               </span>
             </div>
           </div>
@@ -144,33 +140,19 @@ export default function PostIt({
         )}
       </div>
 
-      {/* Footer (Created Date or Login Trigger) */}
-      <div className="relative h-12 w-full flex items-end">
-        {isMain && onGoogleLogin ? (
+      {/* Footer */}
+      <div className="relative h-6 w-full flex items-end">
+        {!isMain && date && (
           <div 
             className={`
-              absolute bottom-0 right-0 z-30
-              transition-all duration-300 ease-out
-              opacity-0 scale-75 pointer-events-none
-              group-hover:opacity-100 group-hover:scale-100 group-hover:pointer-events-auto
-              flex items-center justify-center
+              text-[11px] font-mono opacity-60 font-semibold
+              transition-opacity duration-300 ease-out
+              group-hover:opacity-0
+              pb-1
             `}
           >
-            <GoogleButton onClick={onGoogleLogin} />
+            {date}
           </div>
-        ) : (
-          date && (
-            <div 
-              className={`
-                text-[11px] font-mono opacity-60 font-semibold
-                transition-opacity duration-300 ease-out
-                group-hover:opacity-0
-                pb-1
-              `}
-            >
-              {date}
-            </div>
-          )
         )}
       </div>
     </div>

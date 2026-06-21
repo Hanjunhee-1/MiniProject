@@ -1,19 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { apiService, User, PostItData, Todo } from "@/services/api";
-import PostIt, { PostItColor, PreviewTodo } from "@/components/common/PostIt";
-import GoogleLoginModal from "@/components/common/GoogleLoginModal";
+import { apiService, User, PostItData } from "@/services/api";
+import PostIt, { PreviewTodo } from "@/components/common/PostIt";
 import TodoModal from "@/components/common/TodoModal";
 import FilterButton from "@/components/button/FilterButton";
 import PaginationButton from "@/components/button/PaginationButton";
-import OkButton from "@/components/button/OkButton";
-import { FaSignOutAlt, FaPlus, FaChevronLeft, FaChevronRight } from "react-icons/fa";
+import { FaSignOutAlt, FaChevronLeft, FaChevronRight } from "react-icons/fa";
 
 export default function Home() {
   // Authentication State
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [isLoginModalOpen, setIsLoginModalOpen] = useState(false);
 
   // Board Data State
   const [postIts, setPostIts] = useState<PostItData[]>([]);
@@ -22,38 +19,64 @@ export default function Home() {
   // Board Filters & Pagination State
   const [boardFilter, setBoardFilter] = useState<"all" | "my">("all");
   const [currentPage, setCurrentPage] = useState(1);
+  const [totalPostIts, setTotalPostIts] = useState(0);
   const POSTITS_PER_PAGE = 8;
 
   // Selected Post-it for TodoModal
   const [selectedPostIt, setSelectedPostIt] = useState<PostItData | null>(null);
 
-  // New Post-it Creation Modal State
-  const [isNewPostItOpen, setIsNewPostItOpen] = useState(false);
-  const [newTitle, setNewTitle] = useState("");
-  const [newColor, setNewColor] = useState<PostItColor>("yellow");
-
-  // Initialize Auth & Load Data
+  // Initialize Auth & Check Local Storage
   useEffect(() => {
     const initApp = async () => {
       await apiService.init();
       const user = apiService.getCurrentUser();
       if (user) {
         setCurrentUser(user);
-        loadBoardData();
       }
     };
     initApp();
   }, []);
 
-  // Fetch all board post-its and their todo previews
+  // Fetch board data when user, page, or filter changes
+  useEffect(() => {
+    if (currentUser) {
+      loadBoardData();
+    }
+  }, [currentUser, currentPage, boardFilter]);
+
+  // Render Google button once when logged out
+  useEffect(() => {
+    if (!currentUser) {
+      const initGoogle = () => {
+        if (typeof window !== "undefined" && (window as any).google) {
+          (window as any).google.accounts.id.initialize({
+            client_id: "329350783241-2g92guepmo00g6koqc0hsefvl6986hd5.apps.googleusercontent.com",
+            callback: (response: any) => {
+              handleGoogleCredential(response.credential);
+            }
+          });
+          (window as any).google.accounts.id.renderButton(
+            document.getElementById("google-signin-button"),
+            { theme: "outline", size: "large", width: 220 }
+          );
+        } else {
+          setTimeout(initGoogle, 300);
+        }
+      };
+      initGoogle();
+    }
+  }, [currentUser]);
+
+  // Fetch post-its and todo previews
   const loadBoardData = async () => {
     try {
-      const posts = await apiService.getPostIts();
-      setPostIts(posts);
+      const { items, count } = await apiService.getPostIts(currentPage, boardFilter);
+      setPostIts(items);
+      setTotalPostIts(count);
 
       // Fetch todo previews for each post-it
       const previews: Record<string, PreviewTodo[]> = {};
-      for (const p of posts) {
+      for (const p of items) {
         const list = await apiService.getTodos(p.id);
         previews[p.id] = list.map(t => ({ text: t.text, completed: t.completed }));
       }
@@ -63,21 +86,24 @@ export default function Home() {
     }
   };
 
-  const handleGoogleLoginClick = () => {
-    setIsLoginModalOpen(true);
-  };
-
-  const handleSelectAccount = async (email: string, name: string) => {
+  const handleGoogleCredential = async (credentialToken: string) => {
     try {
-      const user = await apiService.loginWithGoogle(email, name);
+      const { user } = await apiService.loginWithGoogle(credentialToken);
       setCurrentUser(user);
-      setIsLoginModalOpen(false);
-      // Wait for state update then fetch board data
-      setTimeout(() => {
-        loadBoardData();
-      }, 50);
+      setCurrentPage(1);
     } catch (e) {
       console.error("Google Login failed", e);
+      alert("로그인 검증에 실패했습니다. (백엔드가 실행 중인지 확인하세요)");
+    }
+  };
+
+  const handleDeveloperBypass = async () => {
+    try {
+      const user = await apiService.loginDeveloperMock("wnswn@gmail.com", "한준희");
+      setCurrentUser(user);
+      setCurrentPage(1);
+    } catch (e) {
+      console.error("Developer login failed", e);
     }
   };
 
@@ -88,62 +114,11 @@ export default function Home() {
       setPostIts([]);
       setTodosMap({});
       setCurrentPage(1);
+      setTotalPostIts(0);
     }
   };
 
-  const handleCreatePostIt = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!newTitle.trim()) return;
-
-    try {
-      await apiService.createPostIt(newTitle.trim(), newColor);
-      setIsNewPostItOpen(false);
-      setNewTitle("");
-      setNewColor("yellow");
-      await loadBoardData();
-      // Go to first page to see the newly created post-it (which is added at the start)
-      setCurrentPage(1);
-    } catch (e) {
-      console.error("Failed to create post-it", e);
-    }
-  };
-
-  const handleDeletePostIt = async (id: string) => {
-    try {
-      await apiService.deletePostIt(id);
-      setSelectedPostIt(null);
-      await loadBoardData();
-      // If page is now empty, go to previous page
-      const totalFiltered = postIts.filter(p => boardFilter === "all" || p.ownerEmail === currentUser?.email).length - 1;
-      const totalPages = Math.ceil(totalFiltered / POSTITS_PER_PAGE) || 1;
-      if (currentPage > totalPages) {
-        setCurrentPage(totalPages);
-      }
-    } catch (e) {
-      console.error("Failed to delete post-it", e);
-    }
-  };
-
-  // Open creation modal with default title
-  const handleOpenNewPostIt = () => {
-    setNewTitle(`${currentUser?.name || "익명"}의 포스트잇`);
-    setNewColor("yellow");
-    setIsNewPostItOpen(true);
-  };
-
-  // Filter and Paginate post-its
-  const filteredPostIts = postIts.filter(p => {
-    if (boardFilter === "my") {
-      return p.ownerEmail === currentUser?.email;
-    }
-    return true;
-  });
-
-  const totalPages = Math.ceil(filteredPostIts.length / POSTITS_PER_PAGE) || 1;
-  const paginatedPostIts = filteredPostIts.slice(
-    (currentPage - 1) * POSTITS_PER_PAGE,
-    currentPage * POSTITS_PER_PAGE
-  );
+  const totalPages = Math.ceil(totalPostIts / POSTITS_PER_PAGE) || 1;
 
   return (
     <main className="flex-1 w-full min-h-screen relative flex items-center justify-center bg-radial from-stone-800 to-stone-950 p-6 select-none overflow-y-auto">
@@ -151,21 +126,35 @@ export default function Home() {
       <div className="absolute inset-0 opacity-5 bg-[radial-gradient(#ffffff_1px,transparent_1px)] [background-size:16px_16px] pointer-events-none" />
 
       {!currentUser ? (
-        /* Unauthenticated View: Main Login Screen */
-        <div className="flex flex-col items-center gap-8 z-10">
-          <h1 className="text-4xl md:text-5xl font-extrabold text-white text-center font-sans tracking-tight drop-shadow-lg">
-            📝 SKKU <span className="text-amber-300">POST-IT</span> BOARD
-          </h1>
-          <div className="relative p-2 bg-stone-900/40 rounded-xl backdrop-blur-md border border-stone-800 shadow-2xl">
-            <PostIt
-              title="SKKU POST-IT"
-              isMain={true}
-              onGoogleLogin={handleGoogleLoginClick}
-            />
+        /* Unauthenticated View: Minimalist 3D Peeling Login Card */
+        <div className="flex flex-col items-center justify-center z-10">
+          <div className="perspective-container relative w-72 h-72">
+            {/* Underneath Container - holds Google Sign In button */}
+            <div className="under-login-container gap-4">
+              <h4 className="text-xs font-bold tracking-widest text-white/40 uppercase font-sans mb-2">
+                Sign In
+              </h4>
+              
+              {/* Google Button mounting point */}
+              <div id="google-signin-button" className="z-30 min-h-[40px] flex items-center justify-center" />
+              
+              {/* Developer Bypass for quick testing */}
+              <button
+                onClick={handleDeveloperBypass}
+                className="text-[10px] text-white/30 hover:text-white/60 transition-colors uppercase tracking-widest mt-2 font-sans font-bold border-b border-white/10 hover:border-white/30 pb-0.5"
+              >
+                Developer Bypass
+              </button>
+            </div>
+
+            {/* Sticky note lying flat on top. On hover, it flips up! */}
+            <div className="liftable-note absolute inset-0">
+              <PostIt
+                title="POST-IT"
+                isMain={true}
+              />
+            </div>
           </div>
-          <p className="text-stone-400 text-xs md:text-sm font-medium tracking-wide">
-            © 2026 성균관대학교 산학협력 프로젝트 뉴로플로우
-          </p>
         </div>
       ) : (
         /* Authenticated View: Chalkboard Screen */
@@ -173,11 +162,11 @@ export default function Home() {
           {/* Top Board Tray: Chalk Title & User Profile Overlay */}
           <div className="px-8 pt-6 pb-2 flex items-center justify-between border-b border-white/5 relative">
             <div className="flex flex-col">
-              <h1 className="text-3xl md:text-4xl font-bold tracking-wider chalk-text text-white">
-                💡 할일 포스트잇 게시판
+              <h1 className="text-3xl md:text-4xl font-bold tracking-wider chalk-text text-white uppercase font-sans">
+                BOARD
               </h1>
-              <p className="text-xs font-semibold chalk-text text-amber-200/60 mt-0.5">
-                포스트잇을 클릭해 할일을 관리하세요.
+              <p className="text-xs font-semibold chalk-text text-amber-200/50 mt-0.5 tracking-wider font-sans uppercase">
+                Click post-its to manage tasks
               </p>
             </div>
 
@@ -190,22 +179,22 @@ export default function Home() {
                   className="w-7 h-7 rounded-full bg-stone-700 border border-stone-600 shadow-inner" 
                 />
               )}
-              <span className="text-xs font-semibold tracking-wide">{currentUser.name} 님</span>
+              <span className="text-xs font-semibold tracking-wide">{currentUser.name}</span>
               <button 
                 onClick={handleLogout} 
-                className="text-stone-400 hover:text-red-400 transition-colors pl-3 border-l border-stone-700 text-xs flex items-center gap-1.5 font-bold"
+                className="text-stone-400 hover:text-red-400 transition-colors pl-3 border-l border-stone-700 text-xs flex items-center gap-1.5 font-bold uppercase tracking-wider"
               >
                 <FaSignOutAlt size={12} />
-                로그아웃
+                Logout
               </button>
             </div>
           </div>
 
           {/* Central Grid Area */}
           <div className="flex-1 px-8 py-6 flex items-center justify-center">
-            {paginatedPostIts.length > 0 ? (
+            {postIts.length > 0 ? (
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 w-full h-[380px]">
-                {paginatedPostIts.map((p) => (
+                {postIts.map((p) => (
                   <div key={p.id} className="h-[175px] aspect-square mx-auto w-full max-w-[190px]">
                     <PostIt
                       id={p.id}
@@ -218,22 +207,16 @@ export default function Home() {
                   </div>
                 ))}
                 {/* Pad empty spaces to maintain exact alignment */}
-                {Array.from({ length: POSTITS_PER_PAGE - paginatedPostIts.length }).map((_, idx) => (
+                {Array.from({ length: POSTITS_PER_PAGE - postIts.length }).map((_, idx) => (
                   <div 
                     key={`empty-${idx}`} 
-                    className="h-[175px] aspect-square mx-auto w-full max-w-[190px] rounded border-2 border-dashed border-white/5 bg-white/[0.01]" 
+                    className="h-[175px] aspect-square mx-auto w-full max-w-[190px] rounded border border-white/5 bg-white/[0.005]" 
                   />
                 ))}
               </div>
             ) : (
               <div className="text-center py-20">
-                <p className="chalk-text text-xl opacity-60 italic">등록된 포스트잇이 없습니다.</p>
-                <button
-                  onClick={handleOpenNewPostIt}
-                  className="mt-4 px-4 py-2 border border-dashed border-white/30 rounded-md chalk-text text-amber-200 hover:border-amber-300 hover:text-amber-100 transition-all text-sm font-semibold"
-                >
-                  첫 포스트잇 작성하기 +
-                </button>
+                <p className="chalk-text text-xl opacity-60 italic">No post-its found.</p>
               </div>
             )}
           </div>
@@ -255,7 +238,7 @@ export default function Home() {
             {/* Left Section: Board Filters */}
             <div className="flex gap-2">
               <FilterButton 
-                text="모든 포스트잇" 
+                text="ALL" 
                 variant={boardFilter === "all" ? "active" : "default"}
                 onClick={() => {
                   setBoardFilter("all");
@@ -263,7 +246,7 @@ export default function Home() {
                 }}
               />
               <FilterButton 
-                text="내 포스트잇" 
+                text="MY BOARDS" 
                 variant={boardFilter === "my" ? "active" : "default"}
                 onClick={() => {
                   setBoardFilter("my");
@@ -299,116 +282,20 @@ export default function Home() {
               </PaginationButton>
             </div>
 
-            {/* Right Section: Add Button */}
-            <div>
-              <button
-                onClick={handleOpenNewPostIt}
-                className="flex items-center gap-1.5 px-4 h-10 bg-amber-400 hover:bg-amber-300 active:bg-amber-500 text-amber-950 font-bold border border-amber-500 rounded shadow-md hover:scale-103 active:scale-97 transition-all text-sm font-sans"
-              >
-                <FaPlus size={12} />
-                새 포스트잇 작성
-              </button>
-            </div>
+            {/* Right Section: Spacer for layout balancing */}
+            <div className="w-[120px]" />
           </div>
         </div>
       )}
-
-      {/* Google Login Selector Modal */}
-      <GoogleLoginModal
-        isOpen={isLoginModalOpen}
-        onClose={() => setIsLoginModalOpen(false)}
-        onSelectAccount={handleSelectAccount}
-      />
 
       {/* Selected Todo Management Modal */}
       <TodoModal
         postIt={selectedPostIt}
         isOpen={selectedPostIt !== null}
         onClose={() => setSelectedPostIt(null)}
-        onDeletePostIt={handleDeletePostIt}
         currentUser={currentUser}
         onRefreshBoard={loadBoardData}
       />
-
-      {/* New Post-it Creation Modal */}
-      {isNewPostItOpen && (
-        <div 
-          className="fixed inset-0 z-40 flex items-center justify-center bg-black/60 backdrop-blur-xs p-4"
-          onClick={() => setIsNewPostItOpen(false)}
-        >
-          <div 
-            className="w-full max-w-md bg-stone-900 rounded-lg shadow-2xl border border-stone-800 overflow-hidden flex flex-col transition-all text-stone-100"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="px-6 py-4 border-b border-stone-800 flex items-center justify-between">
-              <h2 className="text-xl font-bold tracking-wide font-sans">새 포스트잇 추가</h2>
-              <button 
-                onClick={() => setIsNewPostItOpen(false)} 
-                className="text-stone-400 hover:text-stone-200 text-lg"
-              >
-                ×
-              </button>
-            </div>
-
-            <form onSubmit={handleCreatePostIt} className="p-6 space-y-5 font-sans">
-              <div>
-                <label className="block text-xs font-semibold text-stone-400 mb-1.5">포스트잇 제목</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="예: 홍길동의 포스트잇"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full px-3 py-2 bg-stone-850 border border-stone-700 rounded focus:outline-none focus:ring-2 focus:ring-amber-400 focus:border-amber-400 text-sm text-white"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-stone-400 mb-2">포스트잇 색상 선택</label>
-                <div className="flex gap-4">
-                  {(["yellow", "pink", "blue", "green", "purple"] as PostItColor[]).map((col) => {
-                    const bgColors = {
-                      yellow: "bg-[#fef08a]",
-                      pink: "bg-[#fbcfe8]",
-                      blue: "bg-[#bfdbfe]",
-                      green: "bg-[#bbf7d0]",
-                      purple: "bg-[#e9d5ff]"
-                    };
-                    return (
-                      <button
-                        key={col}
-                        type="button"
-                        onClick={() => setNewColor(col)}
-                        className={`
-                          w-8 h-8 rounded-full ${bgColors[col]} border-2 
-                          ${newColor === col ? "border-amber-400 scale-110 shadow-lg" : "border-stone-700 scale-100 hover:scale-105 opacity-80 hover:opacity-100"}
-                          transition-all duration-150
-                        `}
-                        title={col}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setIsNewPostItOpen(false)}
-                  className="flex-1 px-4 py-2 bg-stone-800 hover:bg-stone-700 text-stone-300 rounded text-sm font-medium transition-colors border border-stone-700"
-                >
-                  취소
-                </button>
-                <OkButton
-                  onClick={() => {}}
-                  className="flex-1"
-                  text="생성하기"
-                />
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </main>
   );
 }

@@ -8,7 +8,6 @@ interface TodoModalProps {
   postIt: PostItData | null;
   isOpen: boolean;
   onClose: () => void;
-  onDeletePostIt: (id: string) => void;
   currentUser: User | null;
   onRefreshBoard: () => void;
 }
@@ -55,7 +54,6 @@ export default function TodoModal({
   postIt,
   isOpen,
   onClose,
-  onDeletePostIt,
   currentUser,
   onRefreshBoard
 }: TodoModalProps) {
@@ -101,9 +99,9 @@ export default function TodoModal({
     }
   };
 
-  const handleToggleTodo = async (id: string) => {
+  const handleToggleTodo = async (id: string, currentCompleted: boolean) => {
     try {
-      const updated = await apiService.toggleTodo(id);
+      const updated = await apiService.toggleTodo(postIt.id, id, !currentCompleted);
       setTodos(prev => prev.map(t => t.id === id ? updated : t));
       onRefreshBoard();
     } catch (e) {
@@ -113,17 +111,11 @@ export default function TodoModal({
 
   const handleDeleteTodo = async (id: string) => {
     try {
-      await apiService.deleteTodo(id);
+      await apiService.deleteTodo(postIt.id, id);
       setTodos(prev => prev.filter(t => t.id !== id));
       onRefreshBoard();
     } catch (e) {
       console.error("Failed to delete todo", e);
-    }
-  };
-
-  const handleDeletePostIt = () => {
-    if (confirm("이 포스트잇과 안의 모든 할일들을 정말 삭제할까요?")) {
-      onDeletePostIt(postIt.id);
     }
   };
 
@@ -133,7 +125,7 @@ export default function TodoModal({
     return true;
   });
 
-  const isOwner = currentUser?.email === postIt.ownerEmail;
+  const isOwner = currentUser?.id === postIt.ownerId;
 
   return (
     <div 
@@ -156,22 +148,28 @@ export default function TodoModal({
 
         {/* Todo List Area */}
         <div className="p-6 flex-1 flex flex-col min-h-[250px] max-h-[380px] overflow-y-auto">
-          {/* Add Todo Form */}
-          <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
-            <input
-              type="text"
-              placeholder="새로운 할일을 입력하세요..."
-              value={newTodoText}
-              onChange={(e) => setNewTodoText(e.target.value)}
-              className="flex-1 px-3 py-2 bg-white/60 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white text-sm font-semibold placeholder-black/35"
-            />
-            <button
-              type="submit"
-              className={`p-2 rounded flex items-center justify-center transition-all ${colorInfo.accent}`}
-            >
-              <FaPlus size={16} />
-            </button>
-          </form>
+          {/* Add Todo Form - Only visible to owner */}
+          {isOwner ? (
+            <form onSubmit={handleAddTodo} className="flex gap-2 mb-4">
+              <input
+                type="text"
+                placeholder="새로운 할일을 입력하세요..."
+                value={newTodoText}
+                onChange={(e) => setNewTodoText(e.target.value)}
+                className="flex-1 px-3 py-2 bg-white/60 border border-black/20 rounded focus:outline-none focus:ring-2 focus:ring-amber-500 focus:bg-white text-sm font-semibold placeholder-black/35"
+              />
+              <button
+                type="submit"
+                className={`p-2 rounded flex items-center justify-center transition-all ${colorInfo.accent}`}
+              >
+                <FaPlus size={16} />
+              </button>
+            </form>
+          ) : (
+            <div className="text-xs bg-black/5 px-3 py-2 rounded mb-4 italic text-center font-bold">
+              다른 사람의 포스트잇은 조회만 가능합니다.
+            </div>
+          )}
 
           {/* Filters */}
           <div className="flex gap-1.5 mb-4 pb-2 border-b border-black/5 text-sm">
@@ -204,27 +202,30 @@ export default function TodoModal({
                 >
                   <button
                     type="button"
-                    onClick={() => handleToggleTodo(todo.id)}
+                    disabled={!isOwner}
+                    onClick={() => handleToggleTodo(todo.id, todo.completed)}
                     className={`
                       w-5 h-5 flex items-center justify-center rounded border border-black/30 bg-white/50
-                      hover:bg-white transition-colors
+                      ${isOwner ? "hover:bg-white cursor-pointer" : "cursor-default opacity-80"} transition-colors
                     `}
                   >
                     {todo.completed && <FaCheck size={10} className="text-amber-800" />}
                   </button>
                   <span 
-                    onClick={() => handleToggleTodo(todo.id)}
-                    className={`flex-1 text-sm font-bold cursor-pointer select-none truncate ${todo.completed ? "line-through opacity-40 font-normal" : "opacity-90"}`}
+                    onClick={() => isOwner && handleToggleTodo(todo.id, todo.completed)}
+                    className={`flex-1 text-sm font-bold truncate select-none ${isOwner ? "cursor-pointer" : "cursor-default"} ${todo.completed ? "line-through opacity-40 font-normal" : "opacity-90"}`}
                   >
                     {todo.text}
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => handleDeleteTodo(todo.id)}
-                    className="opacity-0 group-hover/item:opacity-75 hover:opacity-100 hover:text-red-700 p-1 text-stone-500 transition-opacity"
-                  >
-                    <FaTrash size={12} />
-                  </button>
+                  {isOwner && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteTodo(todo.id)}
+                      className="opacity-0 group-hover/item:opacity-75 hover:opacity-100 hover:text-red-700 p-1 text-stone-500 transition-opacity"
+                    >
+                      <FaTrash size={12} />
+                    </button>
+                  )}
                 </div>
               ))
             ) : (
@@ -236,19 +237,7 @@ export default function TodoModal({
         </div>
 
         {/* Modal Footer */}
-        <div className="px-6 py-4 bg-black/5 border-t border-black/10 flex items-center justify-between">
-          <div>
-            {isOwner && (
-              <button
-                onClick={handleDeletePostIt}
-                className="flex items-center gap-1.5 px-3 py-1.5 text-xs text-red-700 hover:text-white bg-red-50 hover:bg-red-600 border border-red-200 rounded transition-all font-semibold shadow-xs"
-              >
-                <FaTrash size={10} />
-                포스트잇 삭제
-              </button>
-            )}
-          </div>
-          
+        <div className="px-6 py-4 bg-black/5 border-t border-black/10 flex items-center justify-end">
           <OkButton 
             onClick={onClose} 
             className="shadow-md hover:scale-102"
