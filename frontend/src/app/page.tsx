@@ -9,17 +9,11 @@ import { POSTIT_COLORS } from "@/constants/colors";
 import MainPostIt from "@/components/postit/MainPostIt";
 import { loginWithGoogle } from "@/api/auth";
 
-interface PostItData {
-  id: number;
-  author: string;
-  content: string;
-  date: string;
-  colorIndex?: number;
-}
+import { PostIt, Todo } from "@/types";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
-  const [postIts, setPostIts] = useState<PostItData[]>([]);
+  const [postIts, setPostIts] = useState<PostIt[]>([]);
   const [filter, setFilter] = useState<"mine" | "other">("mine");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
@@ -167,17 +161,16 @@ export default function Home() {
               </div>
             ) : postIts && postIts.length > 0 ? (
               postIts.map((post) => {
-                const colorClass = POSTIT_COLORS[(post.colorIndex ?? post.id) % POSTIT_COLORS.length];
+                const colorClass = POSTIT_COLORS[post.id % POSTIT_COLORS.length];
                 return (
                   <div
                     key={post.id}
                     className={`w-full h-full ${colorClass} p-4 rounded-sm shadow-md border flex flex-col justify-between transform transition-all duration-300 hover:scale-105 cursor-pointer`}
                   >
                     <div>
-                      <div className="text-xs font-bold opacity-60 mb-1">{post.author}'s</div>
-                      <div className="text-sm font-medium line-clamp-4 leading-snug">{post.content}</div>
+                      <div className="text-xs font-bold opacity-60 mb-1">{post.user_name}'s</div>
                     </div>
-                    <div className="text-[10px] font-mono opacity-50 text-right">{post.date}</div>
+                    <div className="text-[10px] font-mono opacity-50 text-right">{post.created_at}</div>
                   </div>
                 );
               })
