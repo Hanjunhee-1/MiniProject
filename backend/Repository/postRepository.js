@@ -20,10 +20,17 @@ const postRepository = {
 
     async findByUserId(user_id, page = 1, limit = 8) {
         const offset = (page - 1) * limit;
-        const [rows] = await pool.query(
-            "SELECT * FROM post_its WHERE user_id = ? ORDER BY created_at DESC LIMIT ? OFFSET ?",
-            [user_id, limit, offset]
-        );
+        const [rows] = await pool.query(`
+            SELECT
+                p.*,
+                u.name AS user_name
+            FROM post_its p
+            JOIN users u
+                ON p.user_id = u.id
+            WHERE p.user_id = ?
+            ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [user_id, limit, offset]);
         const [countRows] = await pool.query(
             "SELECT COUNT(*) as count FROM post_its WHERE user_id = ?",
             [user_id]
@@ -36,10 +43,16 @@ const postRepository = {
 
     async findAll(page = 1, limit = 8) {
         const offset = (page - 1) * limit;
-        const [rows] = await pool.query(
-            "SELECT * FROM post_its ORDER BY created_at DESC LIMIT ? OFFSET ?",
-            [limit, offset]
-        );
+        const [rows] = await pool.query(`
+            SELECT
+                p.*,
+                u.name AS user_name
+            FROM post_its p
+            JOIN users u
+                ON p.user_id = u.id
+            ORDER BY p.created_at DESC
+            LIMIT ? OFFSET ?
+        `, [limit, offset]);
         const [countRows] = await pool.query(
             "SELECT COUNT(*) as count FROM post_its"
         );
