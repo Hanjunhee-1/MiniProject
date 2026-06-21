@@ -7,6 +7,7 @@ import PaginationButton from "@/components/button/PaginationButton";
 import BaseButton from "@/components/button/BaseButton";
 import { POSTIT_COLORS } from "@/constants/colors";
 import MainPostIt from "@/components/postit/MainPostIt";
+import { loginWithGoogle } from "@/api/auth";
 
 interface PostItData {
   id: number;
@@ -30,28 +31,13 @@ export default function Home() {
   const handleCredentialResponse = async (response: any) => {
     console.log("구글 ID 토큰 획득 성공. 백엔드로 검증 요청을 보냅니다.");
     try {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ token: response.credential }),
-      });
+      const jwtToken = await loginWithGoogle(response.credential);
 
-      if (!res.ok) {
-        throw new Error(`백엔드 서버 에러 상태코드: ${res.status}`);
-      }
-
-      const data = await res.json();
-      const jwtToken = data.token || data.jwt || data.accessToken;
-
-      if (jwtToken) {
-        setToken(jwtToken);
-        console.log("실제 백엔드 JWT 발급 및 인증 완료.");
-      } else {
-        console.error("백엔드 응답 구조에 토큰 필드가 없습니다:", data);
-      }
+      setToken(jwtToken);
+      console.log("실제 백엔드 JWT 발급 및 인증 완료.");
     } catch (error) {
-      console.error("백엔드 연동 중 에러 발생:", error);
-      alert("백엔드 API와의 실연동에 실패했습니다. 서버 상태나 엔드포인트를 확인하세요.");
+      console.error("인증 연동 중 에러 발생:", error);
+      alert("백엔드 API와의 실연동에 실패했습니다. 서버 상태를 확인하세요.");
     }
   };
 
