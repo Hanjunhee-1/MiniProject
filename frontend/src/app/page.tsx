@@ -10,11 +10,13 @@ import MainPostIt from "@/components/postit/MainPostIt";
 import { loginWithGoogle } from "@/api/auth";
 
 import { PostIt, Todo } from "@/types";
+import LogoutButton from "@/components/button/LogoutButton";
+import FilterButton from "@/components/button/FilterButton";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
   const [postIts, setPostIts] = useState<PostIt[]>([]);
-  const [filter, setFilter] = useState<"mine" | "other">("mine");
+  const [filter, setFilter] = useState<"all" | "mine">("all");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
@@ -108,7 +110,7 @@ export default function Home() {
   }, [token, filter, currentPage]);
 
   const handleFilterChange = () => {
-    setFilter(prev => prev === "mine" ? "other" : "mine");
+    setFilter(prev => prev === "all" ? "mine" : "all");
     setCurrentPage(1);
   };
 
@@ -136,17 +138,16 @@ export default function Home() {
   // ==========================================
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
-      <button
+      <LogoutButton
         onClick={() => { setToken(null); setPostIts([]); }}
+        text="← 로그아웃"
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
-      >
-        ← 로그아웃
-      </button>
+      />
 
       <div className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative">
         <div className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2">
           <span className="text-white font-bold text-2xl tracking-wide">
-            ✏️ {filter === "mine" ? "My Post-it" : "Other's Post-it"}
+            ✏️ {filter === "all" ? "모두의 포스트잇" : "내 포스트잇"}
           </span>
           <span className="text-green-300 text-sm font-medium">현재 페이지: {currentPage} / {totalPages}</span>
         </div>
@@ -201,14 +202,11 @@ export default function Home() {
               />
             </div>
 
-            <BaseButton
+            <FilterButton
               onClick={handleFilterChange}
-              variant="active"
-              size="md"
-              className="w-full py-3 mb-2 font-bold text-xs shadow-md uppercase"
-            >
-              Change Filter
-            </BaseButton>
+              variant={filter === "mine" ? "active" : "default"}
+              text={filter === "all" ? "내 포스트잇 보기" : "모두의 포스트잇 보기"}
+            />
           </div>
         </div>
       </div>
