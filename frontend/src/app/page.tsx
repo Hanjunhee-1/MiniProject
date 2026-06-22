@@ -1,12 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
 import Script from "next/script";
 import PaginationButton from "@/components/button/PaginationButton";
 import { POSTIT_COLORS } from "@/constants/colors";
 import MainPostIt from "@/components/postit/MainPostIt";
-import { loginWithGoogle } from "@/api/auth";
-import { getPostIts } from "@/api/postIts"; // 🌟 우리가 만든 API 함수 임포트
+import { getPostIts } from "@/api/postIts";
 
 import { PostIt } from "@/types";
 import LogoutButton from "@/components/button/LogoutButton";
@@ -22,20 +22,17 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  // 🌟 이 ref가 칠판 div와 매핑되어야 정상 좌표 계산이 시작됩니다.
+  const blackboardRef = useRef<HTMLDivElement>(null);
 
-  // 백엔드 /auth API 실연동 핸들러
-  const handleCredentialResponse = async (response: any) => {
-    console.log("구글 ID 토큰 획득 성공. 백엔드로 검증 요청을 보냅니다.");
-    try {
-      const jwtToken = await loginWithGoogle(response.credential);
-      setToken(jwtToken);
-      console.log("실제 백엔드 JWT 발급 및 인증 완료.");
-    } catch (error) {
-      console.error("인증 연동 중 에러 발생:", error);
-      alert("백엔드 API와의 실연동에 실패했습니다. 서버 상태를 확인하세요.");
-    }
-  };
+  // [트랜지션 전용 상태] 클릭된 가상 포스트잇의 애니메이션 좌표 및 스타일 추적
+  const [zoomedPostIt, setZoomedPostIt] = useState<{
+    colorClass: string;
+    style: React.CSSProperties;
+  } | null>(null);
+
+  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
 
   const { initializeGoogleSignIn } = useGoogleSignIn({
     token,
@@ -43,22 +40,25 @@ export default function Home() {
     buttonRef: googleBtnContainerRef,
   });
 
-  // 실연동 데이터 패칭 유닛 (getPostIts API 적용)
+  // 브라우저 최초 진입 및 컴포넌트 재생성 시 토큰 복원 (자동 로그인)
+  useEffect(() => {
+    const savedToken = localStorage.getItem("accessToken");
+    if (savedToken) {
+      setToken(savedToken);
+    }
+  }, []);
+
+  // 실연동 데이터 패칭 유닛
   useEffect(() => {
     if (!token) return;
 
     const fetchPostIts = async () => {
       setIsLoading(true);
       try {
-        // 쿼리 파라미터 스펙 객체 전달
         const data = await getPostIts(token, { filter, page: currentPage });
-
         if (data.success) {
-          // 백엔드 명세 키인 "post-its"에서 안전하게 리스트 추출
           const fetchedList = data["post-its"] || [];
           setPostIts(fetchedList);
-
-          // 백엔드에서 준 count와 pageSize를 사용하여 총 페이지 수 계산 (ex: 9개 데이터 / page당 8개 = 2페이지)
           const calculatedTotalPages = Math.ceil(data.count / data.pageSize) || 1;
           setTotalPages(calculatedTotalPages);
         } else {
@@ -76,12 +76,57 @@ export default function Home() {
 
   const handleFilterChange = () => {
     setFilter(prev => (prev === "all" ? "mine" : "all"));
-    setCurrentPage(1); // 필터 변경 시 첫 페이지로 리셋
+    setCurrentPage(1);
   };
 
-  // ==========================================
-  // [화면 1] 로그인 대기 상태
-  // ==========================================
+  // [핵심 인터랙션 함수] 클릭한 그리드 카드의 좌표를 따서 대형 포스트잇으로 변환
+  const handlePostItClick = (rect: DOMRect, post: PostIt, colorClass: string) => {
+    const blackboard = blackboardRef.current;
+    if (!blackboard) {
+      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}`);
+      return;
+    }
+
+    const boardRect = blackboard.getBoundingClientRect();
+
+    // 1단계: 원본 카드의 위치와 고유 colorClass를 함께 상태에 저장
+    setZoomedPostIt({
+      colorClass, // 💡 선택한 포스트잇 고유의 Tailwind 클래스 (예: bg-[#D4F1E7] 등)
+      style: {
+        position: "fixed",
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        zIndex: 50,
+        transition: "all 800ms cubic-bezier(0.16, 1, 0.3, 1)",
+      },
+    });
+
+    // 2단계: 800ms 동안 칠판 프레임 크기만큼 확장 유도
+    setTimeout(() => {
+      setZoomedPostIt((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          style: {
+            ...prev.style,
+            top: `${boardRect.top + 32}px`,
+            left: `${boardRect.left + 32}px`,
+            width: `${boardRect.width - 64}px`,
+            height: `${boardRect.height - 64}px`,
+            borderRadius: "0.5rem",
+          },
+        };
+      });
+    }, 20);
+
+    // 3단계: 애니메이션이 종료되면 쿼리 스트링으로 색상값을 들고 상세페이지로 이동
+    setTimeout(() => {
+      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}`);
+    }, 820);
+  };
+
   if (!token) {
     return (
       <>
@@ -90,7 +135,6 @@ export default function Home() {
           strategy="afterInteractive"
           onLoad={initializeGoogleSignIn}
         />
-
         <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-4 select-none">
           <MainPostIt ref={googleBtnContainerRef} />
         </main>
@@ -98,18 +142,47 @@ export default function Home() {
     );
   }
 
-  // ==========================================
-  // [화면 2] 로그인 완료 및 실데이터 칠판 대시보드
-  // ==========================================
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
+      {/* 트랜지션 애니메이션 오버레이 렌더링 구역 */}
+      {zoomedPostIt && (
+        <>
+          <div className="fixed inset-0 bg-black/20 z-40 animate-in fade-in duration-500" />
+          <div
+            // 💡 bg-[#FFFDEE] 대신 원본 포스트잇의 colorClass를 그대로 이어받습니다.
+            className={`shadow-2xl flex flex-col justify-between p-8 z-50 text-slate-800 ${zoomedPostIt.colorClass}`}
+            style={zoomedPostIt.style}
+          >
+            <div className="w-full flex flex-col h-full">
+              <div className="flex items-center justify-between">
+                <h2 className="text-2xl font-black text-slate-800 tracking-wide">
+                  📌 Task Board
+                </h2>
+              </div>
+              <p className="text-xs text-slate-500 mt-1">포스트잇 고유 식별코드: 연동 중...</p>
+              <div className="w-full h-[1px] bg-slate-800/10 my-4" />
+
+              <div className="flex-1 border border-dashed border-slate-400/40 rounded bg-white/30 flex items-center justify-center">
+                <p className="text-sm font-semibold text-slate-500/80 animate-pulse">
+                  할 일 목록 리스트를 불러오고 있습니다...
+                </p>
+              </div>
+            </div>
+          </div>
+        </>
+      )}
+
       <LogoutButton
-        onClick={() => { setToken(null); setPostIts([]); }}
+        onClick={() => { localStorage.removeItem("accessToken"); setToken(null); setPostIts([]); }}
         text="← 로그아웃"
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
       />
 
-      <div className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative">
+      {/* 🌟 중요: 칠판 컨테이너 레이어에 ref={blackboardRef}를 안전하게 주입 완료했습니다! */}
+      <div
+        ref={blackboardRef}
+        className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative"
+      >
         <div className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2">
           <span className="text-white font-bold text-2xl tracking-wide">
             ✏️ {filter === "all" ? "모두의 포스트잇" : "내 포스트잇"}
@@ -118,7 +191,6 @@ export default function Home() {
         </div>
 
         <div className="h-[85%] w-full flex gap-6 my-4">
-
           {/* 포스트잇 배치 그리드 */}
           <div className="w-3/4 h-full grid grid-cols-4 grid-rows-2 gap-4 border border-dashed border-green-800/40 rounded-md p-4 items-center justify-items-center bg-black/5">
             {isLoading ? (
@@ -133,9 +205,7 @@ export default function Home() {
                     key={post.id}
                     post={post}
                     colorClass={colorClass}
-                    onClick={() => {
-                      console.log(`선택된 포스트잇의 ID:${post.id}`);
-                    }}
+                    onClick={(rect) => handlePostItClick(rect, post, colorClass)}
                   />
                 );
               })
