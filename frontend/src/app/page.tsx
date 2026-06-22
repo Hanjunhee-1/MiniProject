@@ -2,14 +2,13 @@
 
 import { useState, useEffect, useRef } from "react";
 import Script from "next/script";
-import BasePostIt from "@/components/postit/BasePostIt";
 import PaginationButton from "@/components/button/PaginationButton";
-import BaseButton from "@/components/button/BaseButton";
 import { POSTIT_COLORS } from "@/constants/colors";
 import MainPostIt from "@/components/postit/MainPostIt";
 import { loginWithGoogle } from "@/api/auth";
+import { getPostIts } from "@/api/postIts"; // 🌟 우리가 만든 API 함수 임포트
 
-import { PostIt, Todo } from "@/types";
+import { PostIt } from "@/types";
 import LogoutButton from "@/components/button/LogoutButton";
 import FilterButton from "@/components/button/FilterButton";
 
@@ -28,7 +27,6 @@ export default function Home() {
     console.log("구글 ID 토큰 획득 성공. 백엔드로 검증 요청을 보냅니다.");
     try {
       const jwtToken = await loginWithGoogle(response.credential);
-
       setToken(jwtToken);
       console.log("실제 백엔드 JWT 발급 및 인증 완료.");
     } catch (error) {
@@ -74,31 +72,27 @@ export default function Home() {
     return () => { delete (window as any).handleCredentialResponse; };
   }, [token]);
 
-  // 실연동 데이터 패칭 유닛
+  // 실연동 데이터 패칭 유닛 (getPostIts API 적용)
   useEffect(() => {
     if (!token) return;
 
     const fetchPostIts = async () => {
       setIsLoading(true);
       try {
-        const res = await fetch(
-          `${process.env.NEXT_PUBLIC_API_URL}/post-its?filter=${filter}&page=${currentPage}&limit=8`,
-          {
-            method: "GET",
-            headers: {
-              "Authorization": `Bearer ${token}`,
-              "Content-Type": "application/json"
-            }
-          }
-        );
+        // 쿼리 파라미터 스펙 객체 전달
+        const data = await getPostIts(token, { filter, page: currentPage });
 
-        if (!res.ok) throw new Error("포스트잇 목록을 받아오지 못했습니다.");
-        const data = await res.json();
+        if (data.success) {
+          // 백엔드 명세 키인 "post-its"에서 안전하게 리스트 추출
+          const fetchedList = data["post-its"] || [];
+          setPostIts(fetchedList);
 
-        // 🌟 안전장치: 응답 데이터 구조 유연화 (배열이 아닐 경우 빈 배열로 방어)
-        const fetchedList = data.postIts || data.data || (Array.isArray(data) ? data : []);
-        setPostIts(fetchedList);
-        setTotalPages(data.totalPages || data.total_pages || 1);
+          // 백엔드에서 준 count와 pageSize를 사용하여 총 페이지 수 계산 (ex: 9개 데이터 / page당 8개 = 2페이지)
+          const calculatedTotalPages = Math.ceil(data.count / data.pageSize) || 1;
+          setTotalPages(calculatedTotalPages);
+        } else {
+          console.error("포스트잇 목록 로드 실패");
+        }
       } catch (error) {
         console.error("API GET 요청 중 오류:", error);
       } finally {
@@ -110,8 +104,8 @@ export default function Home() {
   }, [token, filter, currentPage]);
 
   const handleFilterChange = () => {
-    setFilter(prev => prev === "all" ? "mine" : "all");
-    setCurrentPage(1);
+    setFilter(prev => (prev === "all" ? "mine" : "all"));
+    setCurrentPage(1); // 필터 변경 시 첫 페이지로 리셋
   };
 
   // ==========================================
@@ -154,7 +148,7 @@ export default function Home() {
 
         <div className="h-[85%] w-full flex gap-6 my-4">
 
-          {/* 🟢 가독성 및 렌더링 안전성을 위해 복잡한 삼항연산자를 깔끔하게 정돈한 포스트잇 배치 그리드 */}
+          {/* 포스트잇 배치 그리드 */}
           <div className="w-3/4 h-full grid grid-cols-4 grid-rows-2 gap-4 border border-dashed border-green-800/40 rounded-md p-4 items-center justify-items-center bg-black/5">
             {isLoading ? (
               <div className="text-green-300 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center animate-pulse">
@@ -171,7 +165,9 @@ export default function Home() {
                     <div>
                       <div className="text-xs font-bold opacity-60 mb-1">{post.user_name}'s</div>
                     </div>
-                    <div className="text-[10px] font-mono opacity-50 text-right">{post.created_at}</div>
+                    <div className="text-[10px] font-mono opacity-50 text-right">
+                      {new Date(post.created_at).toLocaleDateString()}
+                    </div>
                   </div>
                 );
               })
@@ -182,6 +178,7 @@ export default function Home() {
             )}
           </div>
 
+          {/* 사이드 제어 바 */}
           <div className="w-1/4 h-full flex flex-col items-center justify-between border-l border-green-700/50 pl-4">
             <div className="flex flex-col items-center gap-6 mt-4">
               <PaginationButton

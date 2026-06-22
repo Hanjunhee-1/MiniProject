@@ -48,7 +48,7 @@ export interface SingleTodoResponse {
  */
 
 export interface GetPostItsQuery {
-    filter: "mine" | null;
+    filter?: "mine" | null;
     page: number;
 }
 
