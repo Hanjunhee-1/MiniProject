@@ -11,6 +11,7 @@ import { getPostIts } from "@/api/postIts"; // 🌟 우리가 만든 API 함수 
 import { PostIt } from "@/types";
 import LogoutButton from "@/components/button/LogoutButton";
 import FilterButton from "@/components/button/FilterButton";
+import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -35,42 +36,11 @@ export default function Home() {
     }
   };
 
-  // 구글 Sign-In 라이브러리 초기화 및 공식 엘리먼트 바인딩
-  const initializeGoogleSignIn = () => {
-    const clientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID;
-    if (!clientId) {
-      console.error("환경변수 파일(.env)에 NEXT_PUBLIC_GOOGLE_CLIENT_ID가 설정되지 않았습니다.");
-      return;
-    }
-
-    if ((window as any).google?.accounts?.id) {
-      console.log("구글 라이브러리 로드 확인, 초기화를 시작합니다.");
-
-      (window as any).google.accounts.id.initialize({
-        client_id: clientId,
-        callback: handleCredentialResponse,
-        ux_mode: "popup",
-        context: "signin",
-      });
-
-      if (googleBtnContainerRef.current) {
-        (window as any).google.accounts.id.renderButton(googleBtnContainerRef.current, {
-          theme: "outline",
-          size: "large",
-          shape: "circle",
-          type: "icon",
-        });
-      }
-    }
-  };
-
-  useEffect(() => {
-    (window as any).handleCredentialResponse = handleCredentialResponse;
-    if ((window as any).google) {
-      initializeGoogleSignIn();
-    }
-    return () => { delete (window as any).handleCredentialResponse; };
-  }, [token]);
+  const { initializeGoogleSignIn } = useGoogleSignIn({
+    token,
+    setToken,
+    buttonRef: googleBtnContainerRef,
+  });
 
   // 실연동 데이터 패칭 유닛 (getPostIts API 적용)
   useEffect(() => {
