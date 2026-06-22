@@ -1,4 +1,5 @@
-// src/hooks/useGoogleSignIn.ts
+"use client";
+
 import { useEffect, RefObject } from "react";
 import { loginWithGoogle } from "@/api/auth";
 
@@ -13,7 +14,11 @@ export const useGoogleSignIn = ({ token, setToken, buttonRef }: UseGoogleSignInP
         console.log("구글 ID 토큰 획득 성공. 백엔드로 검증 요청을 보냅니다.");
         try {
             const jwtToken = await loginWithGoogle(response.credential);
+
+            // 🌟 획득한 백엔드 JWT 토큰을 브라우저 로컬스토리지에 저장
+            localStorage.setItem("accessToken", jwtToken);
             setToken(jwtToken);
+
             console.log("실제 백엔드 JWT 발급 및 인증 완료.");
         } catch (error) {
             console.error("인증 연동 중 에러 발생:", error);
