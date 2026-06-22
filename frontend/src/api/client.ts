@@ -1,14 +1,25 @@
 // src/api/client.ts
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
 
-export const apiFetch = async (endpoint: string, options: RequestInit = {}) => {
-    const headers = {
+interface CustomOptions extends RequestInit {
+    token?: string | null;
+}
+
+export const apiFetch = async (endpoint: string, options: CustomOptions = {}) => {
+    const { token, ...fetchOptions } = options;
+
+    const headers: Record<string, string> = {
         "Content-Type": "application/json",
-        ...options.headers,
+        ...((fetchOptions.headers as Record<string, string>) || {}),
     };
 
+    // 🌟 토큰이 제공된 경우 Authorization 헤더에 자동으로 Bearer 토큰 주입
+    if (token) {
+        headers["Authorization"] = `Bearer ${token}`;
+    }
+
     const res = await fetch(`${BASE_URL}${endpoint}`, {
-        ...options,
+        ...fetchOptions,
         headers,
     });
 
