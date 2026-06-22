@@ -12,6 +12,7 @@ import { PostIt } from "@/types";
 import LogoutButton from "@/components/button/LogoutButton";
 import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
+import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -128,17 +129,14 @@ export default function Home() {
               postIts.map((post) => {
                 const colorClass = POSTIT_COLORS[post.id % POSTIT_COLORS.length];
                 return (
-                  <div
+                  <DashBoardPostIt
                     key={post.id}
-                    className={`w-full h-full ${colorClass} p-4 rounded-sm shadow-md border flex flex-col justify-between transform transition-all duration-300 hover:scale-105 cursor-pointer`}
-                  >
-                    <div>
-                      <div className="text-xs font-bold opacity-60 mb-1">{post.user_name}'s</div>
-                    </div>
-                    <div className="text-[10px] font-mono opacity-50 text-right">
-                      {new Date(post.created_at).toLocaleDateString()}
-                    </div>
-                  </div>
+                    post={post}
+                    colorClass={colorClass}
+                    onClick={() => {
+                      console.log(`선택된 포스트잇의 ID:${post.id}`);
+                    }}
+                  />
                 );
               })
             ) : (

@@ -19,7 +19,6 @@ export default function BasePostIt({
             w-80 
             h-80 
             p-6 
-            border 
             shadow-md 
             transition-all 
             duration-300
