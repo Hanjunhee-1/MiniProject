@@ -6,6 +6,7 @@ import { getTodosByPostItId, createTodo, deleteTodo, completeTodo } from "@/api/
 import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
 import CommonButton from "@/components/button/CommonButton";
+import Title from "@/components/dashboard/Title";
 
 export default function PostItDetailPage() {
     const params = useParams();
@@ -191,14 +192,11 @@ export default function PostItDetailPage() {
                 <div className={`w-full h-full rounded-md shadow-inner p-8 flex flex-col justify-between ${postColor}`}>
 
                     {/* 상단: 타이틀 구역 */}
-                    <div className="flex justify-between items-end border-b border-slate-300/60 pb-3">
-                        <div>
-                            <h2 className="text-2xl font-black text-slate-800 tracking-wide">
-                                📌 Task Board
-                            </h2>
-                            <p className="text-xs text-slate-500 mt-1">포스트잇 고유 식별코드: No.{postId}</p>
-                        </div>
-                    </div>
+                    <Title
+                        className="flex justify-between items-end border-b border-slate-300/60 pb-3"
+                        text="📌 Task Board">
+                        <p className="text-xs text-slate-500 mt-1">포스트잇 고유 식별코드: No.{postId}</p>
+                    </Title>
 
                     {/* 테이블 영역 */}
                     <div className="flex-1 overflow-y-auto bg-white/40 rounded border border-slate-200/60 my-5">

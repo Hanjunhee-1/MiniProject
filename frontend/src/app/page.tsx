@@ -13,6 +13,7 @@ import LogoutButton from "@/components/button/CommonButton";
 import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
+import Title from "@/components/dashboard/Title";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -175,12 +176,13 @@ export default function Home() {
         ref={blackboardRef}
         className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative"
       >
-        <div className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2">
+        <Title
+          className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2"
+        >
           <span className="text-white font-bold text-2xl tracking-wide">
             ✏️ {filter === "all" ? "모두의 포스트잇" : "내 포스트잇"}
           </span>
-          <span className="text-green-300 text-sm font-medium">현재 페이지: {currentPage} / {totalPages}</span>
-        </div>
+        </Title>
 
         <div className="h-[85%] w-full flex gap-6 my-4">
           {/* 포스트잇 배치 그리드 */}
