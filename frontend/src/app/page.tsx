@@ -14,6 +14,7 @@ import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
 import Title from "@/components/dashboard/Title";
+import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -172,10 +173,13 @@ export default function Home() {
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
       />
 
-      <div
+      {/* <div
         ref={blackboardRef}
         className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative"
-      >
+      > */}
+
+      {/* 칠판 전체 프레임 */}
+      <ChalkboardFrame ref={blackboardRef}>
         <Title
           className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2"
         >
@@ -238,7 +242,7 @@ export default function Home() {
             />
           </div>
         </div>
-      </div>
+      </ChalkboardFrame>
     </main>
   );
 }

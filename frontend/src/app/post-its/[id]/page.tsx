@@ -8,6 +8,7 @@ import { getMe } from "@/api/auth";
 import CommonButton from "@/components/button/CommonButton";
 import Title from "@/components/dashboard/Title";
 import DeleteButton from "@/components/button/DeleteButton";
+import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
 
 export default function PostItDetailPage() {
     const params = useParams();
@@ -189,7 +190,7 @@ export default function PostItDetailPage() {
             />
 
             {/* 칠판 전체 프레임 */}
-            <div className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl p-8 relative">
+            <ChalkboardFrame>
                 <div className={`w-full h-full rounded-md shadow-inner p-8 flex flex-col justify-between ${postColor}`}>
 
                     {/* 상단: 타이틀 구역 */}
@@ -340,7 +341,7 @@ export default function PostItDetailPage() {
                         )}
                     </div>
                 </div>
-            </div>
+            </ChalkboardFrame>
         </main>
     );
 }
