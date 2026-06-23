@@ -16,6 +16,11 @@ import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
 import Title from "@/components/dashboard/Title";
 import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
 import ChalkboardContent from "@/components/dashboard/ChalkboardContent";
+import Notice from "@/components/common/Notice";
+import GridPostIt from "@/components/postit/GridPostIt";
+import SideController from "@/components/common/SideController";
+import PaginationFrame from "@/components/common/PaginationFrame";
+import PaginationNotice from "@/components/common/PaginationNotice";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -185,12 +190,12 @@ export default function Home() {
         </Title>
 
         <ChalkboardContent className="h-[85%] w-full flex gap-6 my-4">
-          {/* 포스트잇 배치 그리드 */}
-          <div className="w-3/4 h-full grid grid-cols-4 grid-rows-2 gap-4 border border-dashed border-green-800/40 rounded-md p-4 items-center justify-items-center bg-black/5">
+          {/* 포스트잇 배치 그리드 2x8 */}
+          <GridPostIt>
             {isLoading ? (
-              <div className="text-green-300 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center animate-pulse">
+              <Notice className="text-green-300 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center animate-pulse">
                 백엔드 통신 중...
-              </div>
+              </Notice>
             ) : postIts && postIts.length > 0 ? (
               postIts.map((post) => {
                 const colorClass = POSTIT_COLORS[post.id % POSTIT_COLORS.length];
@@ -204,39 +209,39 @@ export default function Home() {
                 );
               })
             ) : (
-              <div className="text-green-200/40 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center">
-                조회된 포스트잇이 없습니다.
-              </div>
+              <Notice className="text-green-200/40 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center">
+                조회된 포스트잇이 없습니다
+              </Notice>
             )}
-          </div>
+          </GridPostIt>
 
           {/* 사이드 제어 바 */}
-          <div className="w-1/4 h-full flex flex-col items-center justify-between border-l border-green-700/50 pl-4">
-            <div className="flex flex-col items-center gap-6 mt-4">
+          <SideController>
+            <PaginationFrame>
               <PaginationButton
                 direction="up"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               />
-              <div className="text-center bg-green-900/40 border border-green-700/60 px-4 py-2 rounded-md min-w-[100px]">
+              <PaginationNotice>
                 <p className="text-xs text-green-300 font-semibold uppercase">Page</p>
                 <p className="text-2xl font-black text-white tracking-widest mt-0.5">
                   {currentPage} <span className="text-sm font-normal text-green-400">/</span> {totalPages}
                 </p>
-              </div>
+              </PaginationNotice>
               <PaginationButton
                 direction="down"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
               />
-            </div>
+            </PaginationFrame>
 
             <FilterButton
               onClick={handleFilterChange}
               variant={filter === "mine" ? "active" : "default"}
               text={filter === "all" ? "내 포스트잇 보기" : "모두의 포스트잇 보기"}
             />
-          </div>
+          </SideController>
         </ChalkboardContent>
       </ChalkboardFrame>
     </main>
