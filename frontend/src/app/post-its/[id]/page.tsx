@@ -4,6 +4,7 @@ import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { getTodosByPostItId, createTodo, deleteTodo, completeTodo } from "@/api/postIts";
 import { Todo } from "@/types";
+import { getMe } from "@/api/auth";
 
 export default function PostItDetailPage() {
     const params = useParams();
@@ -29,10 +30,21 @@ export default function PostItDetailPage() {
 
     // 💡 [추가] 최초 진입 시 로컬스토리지에서 유저 고유 ID 식별
     useEffect(() => {
-        const savedUserId = localStorage.getItem("userId");
-        if (savedUserId) {
-            setCurrentUserId(Number(savedUserId));
-        }
+        const fetchCurrentUser = async () => {
+            const token = localStorage.getItem("accessToken");
+            if (!token) return;
+
+            try {
+                const data = await getMe(token);
+                if (data.success && data.user) {
+                    setCurrentUserId(data.user.id);
+                }
+            } catch (error) {
+                console.error("내 정보 불러오기 실패:", error);
+            }
+        };
+
+        fetchCurrentUser();
     }, []);
 
     // 💡 [추가] 본인 소유 권한 체크 검증식
