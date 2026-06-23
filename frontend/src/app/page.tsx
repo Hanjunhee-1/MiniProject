@@ -189,7 +189,7 @@ export default function Home() {
           </span>
         </Title>
 
-        <ChalkboardContent className="h-[85%] w-full flex gap-6 my-4">
+        <ChalkboardContent>
           {/* 포스트잇 배치 그리드 2x8 */}
           <GridPostIt>
             {isLoading ? (
