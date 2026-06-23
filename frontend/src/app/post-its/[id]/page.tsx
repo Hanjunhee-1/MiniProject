@@ -6,6 +6,13 @@ import { getTodosByPostItId } from "@/api/postIts";
 import { Todo } from "@/types";
 
 export default function PostItDetailPage() {
+    /**
+     * 할 일
+     * 1. API 연결
+     * 2. 컴포넌트 재사용 가능한 것은 재사용
+     * 3. UI 좀 더 좋게 만들기
+     * 4. 완료된 할일에 hovering 시에 완료날짜 표시해주기
+     */
     const params = useParams();
     const router = useRouter();
     const searchParams = useSearchParams(); // 💡 쿼리 파라미터 파싱용 훅
