@@ -9,6 +9,7 @@ import CommonButton from "@/components/button/CommonButton";
 import Title from "@/components/dashboard/Title";
 import DeleteButton from "@/components/button/DeleteButton";
 import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
+import PostItContent from "@/components/postit/PostItContent";
 
 export default function PostItDetailPage() {
     const params = useParams();
@@ -191,7 +192,7 @@ export default function PostItDetailPage() {
 
             {/* 칠판 전체 프레임 */}
             <ChalkboardFrame>
-                <div className={`w-full h-full rounded-md shadow-inner p-8 flex flex-col justify-between ${postColor}`}>
+                <PostItContent className={`w-full h-full rounded-md shadow-inner p-8 flex flex-col justify-between ${postColor}`}>
 
                     {/* 상단: 타이틀 구역 */}
                     <Title
@@ -340,7 +341,7 @@ export default function PostItDetailPage() {
                             </button>
                         )}
                     </div>
-                </div>
+                </PostItContent>
             </ChalkboardFrame>
         </main>
     );
