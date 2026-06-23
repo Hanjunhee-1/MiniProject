@@ -13,7 +13,7 @@ import LogoutButton from "@/components/button/CommonButton";
 import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
-import Title from "@/components/dashboard/Title";
+import Title from "@/components/common/Title";
 import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
 import ChalkboardContent from "@/components/dashboard/ChalkboardContent";
 import Notice from "@/components/common/Notice";
@@ -21,6 +21,7 @@ import GridPostIt from "@/components/postit/GridPostIt";
 import SideController from "@/components/common/SideController";
 import PaginationFrame from "@/components/common/PaginationFrame";
 import PaginationNotice from "@/components/common/PaginationNotice";
+import ZoomedPostItOverlay from "@/components/postit/ZoomedPostItOverlay";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -147,31 +148,7 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
       {/* 트랜지션 애니메이션 오버레이 렌더링 구역 */}
-      {zoomedPostIt && (
-        <>
-          <div className="fixed inset-0 bg-black/20 z-40 animate-in fade-in duration-500" />
-          <div
-            className={`shadow-2xl flex flex-col justify-between p-8 z-50 text-slate-800 ${zoomedPostIt.colorClass}`}
-            style={zoomedPostIt.style}
-          >
-            <div className="w-full flex flex-col h-full">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-800 tracking-wide">
-                  📌 Task Board
-                </h2>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">포스트잇 고유 식별코드: 연동 중...</p>
-              <div className="w-full h-[1px] bg-slate-800/10 my-4" />
-
-              <div className="flex-1 border border-dashed border-slate-400/40 rounded bg-white/30 flex items-center justify-center">
-                <p className="text-sm font-semibold text-slate-500/80 animate-pulse">
-                  할 일 목록 리스트를 불러오고 있습니다...
-                </p>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
+      <ZoomedPostItOverlay data={zoomedPostIt} />
 
       <LogoutButton
         onClick={() => { localStorage.removeItem("accessToken"); setToken(null); setPostIts([]); }}

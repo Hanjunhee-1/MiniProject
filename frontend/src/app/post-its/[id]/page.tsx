@@ -6,7 +6,7 @@ import { getTodosByPostItId, createTodo, deleteTodo, completeTodo } from "@/api/
 import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
 import CommonButton from "@/components/button/CommonButton";
-import Title from "@/components/dashboard/Title";
+import Title from "@/components/common/Title";
 import DeleteButton from "@/components/button/DeleteButton";
 import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
 import PostItContent from "@/components/postit/PostItContent";
