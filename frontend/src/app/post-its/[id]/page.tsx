@@ -7,6 +7,7 @@ import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
 import CommonButton from "@/components/button/CommonButton";
 import Title from "@/components/dashboard/Title";
+import DeleteButton from "@/components/button/DeleteButton";
 
 export default function PostItDetailPage() {
     const params = useParams();
@@ -16,13 +17,13 @@ export default function PostItDetailPage() {
     const postId = params.id as string;
     const postColor = searchParams.get("color") || "bg-[#FFFDEE]";
 
-    // 💡 [추가] 쿼리 파라미터에서 소유자 ID 추출
+    // 쿼리 파라미터에서 소유자 ID 추출
     const postOwnerId = searchParams.get("ownerId") ? Number(searchParams.get("ownerId")) : null;
 
     const [todos, setTodos] = useState<Todo[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
 
-    // 💡 [추가] 현재 로그인한 유저 상태 관리
+    // 현재 로그인한 유저 상태 관리
     const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
     // 새로운 TODO 입력을 위한 상태들
@@ -30,7 +31,7 @@ export default function PostItDetailPage() {
     const [newContent, setNewContent] = useState<string>("");
     const [dueDate, setDueDate] = useState<string>("");
 
-    // 💡 [추가] 최초 진입 시 로컬스토리지에서 유저 고유 ID 식별
+    // 최초 진입 시 로컬스토리지에서 유저 고유 ID 식별
     useEffect(() => {
         const fetchCurrentUser = async () => {
             const token = localStorage.getItem("accessToken");
@@ -49,7 +50,7 @@ export default function PostItDetailPage() {
         fetchCurrentUser();
     }, []);
 
-    // 💡 [추가] 본인 소유 권한 체크 검증식
+    // 소유 권한 체크 검증식
     const isOwner = currentUserId !== null && postOwnerId !== null && currentUserId === postOwnerId;
 
     const getTodayString = () => {
@@ -89,7 +90,7 @@ export default function PostItDetailPage() {
         if (e) e.preventDefault();
         if (!newContent.trim()) return;
 
-        // 💡 [추가] 권한 클라이언트 2차 방어
+        // 권한 클라이언트 2차 방어
         if (!isOwner) {
             alert("본인의 포스트잇에만 할 일을 생성할 수 있습니다.");
             return;
@@ -127,7 +128,7 @@ export default function PostItDetailPage() {
     const handleToggleComplete = async (todoId: number, currentStatus: boolean) => {
         if (currentStatus) return;
 
-        // 💡 [추가] 타인 포스트잇 완료 수정 방어
+        // 타인 포스트잇 완료 수정 방어
         if (!isOwner) return;
 
         const token = localStorage.getItem("accessToken") || "";
@@ -152,7 +153,7 @@ export default function PostItDetailPage() {
 
     // 4. TODO 삭제 처리 (DELETE)
     const handleDeleteTodo = async (todoId: number) => {
-        // 💡 [추가] 타인 포스트잇 삭제 방어
+        // 타인 포스트잇 삭제 방어
         if (!isOwner) return;
         if (!confirm("이 할 일 항목을 삭제하시겠습니까?")) return;
 
@@ -230,7 +231,7 @@ export default function PostItDetailPage() {
                                                     <input
                                                         type="checkbox"
                                                         checked={isCompleted}
-                                                        // 💡 [수정] 완료되었거나 본인 소유가 아니라면 체크박스 비활성화
+                                                        // 완료되었거나 본인 소유가 아니라면 체크박스 비활성화
                                                         disabled={isCompleted || !isOwner}
                                                         onChange={() => handleToggleComplete(todo.id, isCompleted)}
                                                         className="w-4 h-4 accent-green-700 cursor-pointer disabled:cursor-not-allowed"
@@ -259,14 +260,13 @@ export default function PostItDetailPage() {
                                                     {todo.due_date ? new Date(todo.due_date).toLocaleDateString() : "—"}
                                                 </td>
                                                 <td className="p-3">
-                                                    {/* 💡 [수정] 본인 소유인 경우에만 삭제 버튼을 노출 */}
+                                                    {/* 본인 소유인 경우에만 삭제 버튼을 노출 */}
                                                     {isOwner && (
-                                                        <button
+                                                        <DeleteButton
                                                             onClick={() => handleDeleteTodo(todo.id)}
-                                                            className="text-red-500 hover:text-red-700 font-bold transition-colors text-base"
-                                                        >
+                                                            className="w-4 h-4 text-red-500 hover:text-red-700 font-bold transition-colors text-base">
                                                             ❌
-                                                        </button>
+                                                        </DeleteButton>
                                                     )}
                                                 </td>
                                             </tr>
@@ -329,7 +329,7 @@ export default function PostItDetailPage() {
                         <p className="text-[11px] text-slate-600 font-medium">
                             💡 완료된 할 일 행의 글자에 마우스를 올리면 정확한 완료 일시가 표시됩니다.
                         </p>
-                        {/* 💡 [수정] 본인 소유일 때만 생성 단추 노출 */}
+                        {/* 본인 소유일 때만 생성 단추 노출 */}
                         {!isCreating && isOwner && (
                             <button
                                 onClick={() => setIsCreating(true)}
