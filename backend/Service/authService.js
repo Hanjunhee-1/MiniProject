@@ -51,6 +51,12 @@ const authService = {
         return {
             token
         };
+    },
+
+    async getMe(userId) {
+        const user = await userRepository.findById(userId);
+
+        return user;
     }
 };
 
