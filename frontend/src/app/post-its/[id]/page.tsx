@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { getTodosByPostItId, createTodo, deleteTodo, completeTodo } from "@/api/postIts";
 import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
+import CommonButton from "@/components/button/CommonButton";
 
 export default function PostItDetailPage() {
     const params = useParams();
@@ -179,12 +180,11 @@ export default function PostItDetailPage() {
     return (
         <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
             {/* 뒤로가기 */}
-            <button
+            <CommonButton
                 onClick={() => router.push("/")}
-                className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium transition-colors"
-            >
-                ← 칠판 대시보드로 돌아가기
-            </button>
+                text="← 칠판 대시보드로 돌아가기"
+                className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
+            />
 
             {/* 칠판 전체 프레임 */}
             <div className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl p-8 relative">

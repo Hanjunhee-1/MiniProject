@@ -9,7 +9,7 @@ import MainPostIt from "@/components/postit/MainPostIt";
 import { getPostIts } from "@/api/postIts";
 
 import { PostIt } from "@/types";
-import LogoutButton from "@/components/button/LogoutButton";
+import LogoutButton from "@/components/button/CommonButton";
 import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
