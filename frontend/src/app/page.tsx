@@ -15,6 +15,7 @@ import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
 import Title from "@/components/dashboard/Title";
 import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
+import ChalkboardContent from "@/components/dashboard/ChalkboardContent";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -173,11 +174,6 @@ export default function Home() {
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
       />
 
-      {/* <div
-        ref={blackboardRef}
-        className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative"
-      > */}
-
       {/* 칠판 전체 프레임 */}
       <ChalkboardFrame ref={blackboardRef}>
         <Title
@@ -188,7 +184,7 @@ export default function Home() {
           </span>
         </Title>
 
-        <div className="h-[85%] w-full flex gap-6 my-4">
+        <ChalkboardContent className="h-[85%] w-full flex gap-6 my-4">
           {/* 포스트잇 배치 그리드 */}
           <div className="w-3/4 h-full grid grid-cols-4 grid-rows-2 gap-4 border border-dashed border-green-800/40 rounded-md p-4 items-center justify-items-center bg-black/5">
             {isLoading ? (
@@ -241,7 +237,7 @@ export default function Home() {
               text={filter === "all" ? "내 포스트잇 보기" : "모두의 포스트잇 보기"}
             />
           </div>
-        </div>
+        </ChalkboardContent>
       </ChalkboardFrame>
     </main>
   );
