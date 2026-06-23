@@ -12,6 +12,13 @@ import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
 import PostItContent from "@/components/postit/PostItContent";
 import BottomController from "@/components/common/BottomController";
 import CreateButton from "@/components/button/CreateButton";
+import Notice from "@/components/common/Notice";
+import TodoListFrame from "@/components/todo/TodoListFrame";
+import TodoListHead from "@/components/todo/TodoListHead";
+import TodoListContents from "@/components/todo/TodoListContents";
+import TodoListBody from "@/components/todo/TodoListBody";
+import TodoRow from "@/components/todo/TodoRow";
+import CheckBox from "@/components/button/CheckBox";
 
 export default function PostItDetailPage() {
   const params = useParams();
@@ -204,41 +211,33 @@ export default function PostItDetailPage() {
           </Title>
 
           {/* 테이블 영역 */}
-          <div className="flex-1 overflow-y-auto bg-white/40 rounded border border-slate-200/60 my-5">
+          <TodoListFrame>
             {isLoading ? (
-              <div className="w-full h-full flex items-center justify-center text-slate-500 font-semibold animate-pulse">
-                할 일 목록 리스트를 불러오고 있습니다...
-              </div>
+              <Notice className="w-full h-full flex items-center justify-center text-slate-500 font-semibold animate-pulse">
+                할 일 목록을 불러오고 있습니다...
+              </Notice>
             ) : todos.length > 0 || isCreating ? (
-              <table className="w-full text-left border-collapse table-fixed">
-                <thead>
-                  <tr className="bg-slate-800/5 border-b border-slate-300 font-bold text-sm text-slate-700 text-center">
-                    <th className="p-3 w-[8%]">완료</th>
-                    <th className="p-3 text-left w-[37%]">할 일</th>
-                    <th className="p-3 w-[10%]">경과일</th>
-                    <th className="p-3 w-[12%]">생성일</th>
-                    <th className="p-3 w-[10%]">소요기간</th>
-                    <th className="p-3 w-[13%]">마감기한</th>
-                    <th className="p-3 w-[10%]">관리</th>
-                  </tr>
-                </thead>
-                <tbody className="text-sm text-slate-800 font-medium">
+              <TodoListContents>
+                <TodoListHead />
+                <TodoListBody>
                   {todos.map((todo) => {
                     const isCompleted = !!todo.completed_at;
 
                     return (
-                      <tr
-                        key={todo.id}
-                        className="border-b border-slate-200 hover:bg-white/40 text-center transition-colors group/row relative"
-                      >
+                      <TodoRow key={todo.id}>
                         <td className="p-3">
-                          <input
+                          {/* <input
                             type="checkbox"
                             checked={isCompleted}
                             // 완료되었거나 본인 소유가 아니라면 체크박스 비활성화
                             disabled={isCompleted || !isOwner}
                             onChange={() => handleToggleComplete(todo.id, isCompleted)}
                             className="w-4 h-4 accent-green-700 cursor-pointer disabled:cursor-not-allowed"
+                          /> */}
+                          <CheckBox
+                            checked={isCompleted}
+                            disabled={isCompleted || !isOwner}
+                            onChange={() => handleToggleComplete(todo.id, isCompleted)}
                           />
                         </td>
                         <td className="p-3 text-left font-bold tracking-tight relative group/content whitespace-pre-wrap break-all">
@@ -273,7 +272,7 @@ export default function PostItDetailPage() {
                             </DeleteButton>
                           )}
                         </td>
-                      </tr>
+                      </TodoRow>
                     );
                   })}
 
@@ -318,15 +317,15 @@ export default function PostItDetailPage() {
                       </td>
                     </tr>
                   )}
-                </tbody>
-              </table>
+                </TodoListBody>
+              </TodoListContents>
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-slate-400 py-16">
+              <Notice className="w-full h-full flex flex-col items-center justify-center text-slate-400 py-16">
                 <span className="text-3xl mb-1">🍃</span>
                 <p className="text-xs font-semibold">아직 등록된 할 일 항목이 존재하지 않습니다.</p>
-              </div>
+              </Notice>
             )}
-          </div>
+          </TodoListFrame>
 
           {/* 하단 제어 바 */}
           <BottomController>
