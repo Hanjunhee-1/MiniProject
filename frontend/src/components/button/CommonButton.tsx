@@ -6,7 +6,7 @@ type LogoutButtonProps = {
     className?: string;
 }
 
-export default function LogoutButton({ onClick, text, className }: LogoutButtonProps) {
+export default function CommonButton({ onClick, text, className }: LogoutButtonProps) {
     return (
         <BaseButton
             onClick={onClick}
