@@ -1,10 +1,16 @@
 // src/api/auth.ts
+import { User } from "@/types";
 import { apiFetch } from "./client";
 
 // 백엔드 응답 인터페이스 정의
 interface AuthResponse {
     success: boolean;
     token: string;
+}
+
+interface GetMeResponse {
+    success: boolean;
+    user: User;
 }
 
 /**
@@ -25,3 +31,10 @@ export const loginWithGoogle = async (googleToken: string): Promise<string> => {
 
     return data.token;
 };
+
+export const getMe = async (token: string): Promise<GetMeResponse> => {
+    return apiFetch(`/auth/me`, {
+        method: "GET",
+        token,
+    });
+}
