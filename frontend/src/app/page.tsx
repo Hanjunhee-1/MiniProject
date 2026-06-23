@@ -22,10 +22,8 @@ export default function Home() {
   const [totalPages, setTotalPages] = useState<number>(1);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
-  // 🌟 이 ref가 칠판 div와 매핑되어야 정상 좌표 계산이 시작됩니다.
   const blackboardRef = useRef<HTMLDivElement>(null);
 
-  // [트랜지션 전용 상태] 클릭된 가상 포스트잇의 애니메이션 좌표 및 스타일 추적
   const [zoomedPostIt, setZoomedPostIt] = useState<{
     colorClass: string;
     style: React.CSSProperties;
@@ -48,7 +46,6 @@ export default function Home() {
     }
   }, []);
 
-  // 실연동 데이터 패칭 유닛
   useEffect(() => {
     if (!token) return;
 
@@ -83,15 +80,14 @@ export default function Home() {
   const handlePostItClick = (rect: DOMRect, post: PostIt, colorClass: string) => {
     const blackboard = blackboardRef.current;
     if (!blackboard) {
-      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}`);
+      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}&ownerId=${post.user_id}`);
       return;
     }
 
     const boardRect = blackboard.getBoundingClientRect();
 
-    // 1단계: 원본 카드의 위치와 고유 colorClass를 함께 상태에 저장
     setZoomedPostIt({
-      colorClass, // 💡 선택한 포스트잇 고유의 Tailwind 클래스 (예: bg-[#D4F1E7] 등)
+      colorClass,
       style: {
         position: "fixed",
         top: `${rect.top}px`,
@@ -103,7 +99,6 @@ export default function Home() {
       },
     });
 
-    // 2단계: 800ms 동안 칠판 프레임 크기만큼 확장 유도
     setTimeout(() => {
       setZoomedPostIt((prev) => {
         if (!prev) return null;
@@ -121,9 +116,8 @@ export default function Home() {
       });
     }, 20);
 
-    // 3단계: 애니메이션이 종료되면 쿼리 스트링으로 색상값을 들고 상세페이지로 이동
     setTimeout(() => {
-      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}`);
+      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}&ownerId=${post.user_id}`);
     }, 820);
   };
 
@@ -149,7 +143,6 @@ export default function Home() {
         <>
           <div className="fixed inset-0 bg-black/20 z-40 animate-in fade-in duration-500" />
           <div
-            // 💡 bg-[#FFFDEE] 대신 원본 포스트잇의 colorClass를 그대로 이어받습니다.
             className={`shadow-2xl flex flex-col justify-between p-8 z-50 text-slate-800 ${zoomedPostIt.colorClass}`}
             style={zoomedPostIt.style}
           >
@@ -178,7 +171,6 @@ export default function Home() {
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
       />
 
-      {/* 🌟 중요: 칠판 컨테이너 레이어에 ref={blackboardRef}를 안전하게 주입 완료했습니다! */}
       <div
         ref={blackboardRef}
         className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative"
