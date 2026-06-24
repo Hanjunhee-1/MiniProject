@@ -261,7 +261,8 @@ export default function PostItDetailPage() {
                           {isOwner && (
                             <DeleteButton
                               onClick={() => handleDeleteTodo(todo.id)}
-                              className="w-4 h-4 text-red-500 hover:text-red-700 font-bold transition-colors text-base">
+                              className="w-4 h-4 text-red-500 hover:bg-red-100 font-bold text-base transform transition-all duration-300 hover:scale-125"
+                            >
                               ❌
                             </DeleteButton>
                           )}
