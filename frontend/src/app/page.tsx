@@ -22,6 +22,7 @@ import SideController from "@/components/common/SideController";
 import PaginationFrame from "@/components/common/PaginationFrame";
 import PaginationNotice from "@/components/common/PaginationNotice";
 import ZoomedPostItOverlay from "@/components/postit/ZoomedPostItOverlay";
+import CommonButton from "@/components/button/CommonButton";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -150,7 +151,7 @@ export default function Home() {
       {/* 트랜지션 애니메이션 오버레이 렌더링 구역 */}
       <ZoomedPostItOverlay data={zoomedPostIt} />
 
-      <LogoutButton
+      <CommonButton
         onClick={() => { localStorage.removeItem("accessToken"); setToken(null); setPostIts([]); }}
         text="← 로그아웃"
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
