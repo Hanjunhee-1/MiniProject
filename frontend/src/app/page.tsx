@@ -1,65 +1,227 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import Script from "next/script";
+import PaginationButton from "@/components/button/PaginationButton";
+import { POSTIT_COLORS } from "@/constants/colors";
+import MainPostIt from "@/components/postit/MainPostIt";
+import { getPostIts } from "@/api/postIts";
+
+import { PostIt } from "@/types";
+import LogoutButton from "@/components/button/CommonButton";
+import FilterButton from "@/components/button/FilterButton";
+import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
+import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
+import Title from "@/components/common/Title";
+import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
+import ChalkboardContent from "@/components/dashboard/ChalkboardContent";
+import Notice from "@/components/common/Notice";
+import GridPostIt from "@/components/postit/GridPostIt";
+import SideController from "@/components/common/SideController";
+import PaginationFrame from "@/components/common/PaginationFrame";
+import PaginationNotice from "@/components/common/PaginationNotice";
+import ZoomedPostItOverlay from "@/components/postit/ZoomedPostItOverlay";
+import CommonButton from "@/components/button/CommonButton";
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
+  const [token, setToken] = useState<string | null>(null);
+  const [postIts, setPostIts] = useState<PostIt[]>([]);
+  const [filter, setFilter] = useState<"all" | "mine">("all");
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [totalPages, setTotalPages] = useState<number>(1);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
+  const blackboardRef = useRef<HTMLDivElement>(null);
+
+  const [zoomedPostIt, setZoomedPostIt] = useState<{
+    colorClass: string;
+    style: React.CSSProperties;
+  } | null>(null);
+
+  const googleBtnContainerRef = useRef<HTMLDivElement>(null);
+  const router = useRouter();
+
+  const { initializeGoogleSignIn } = useGoogleSignIn({
+    token,
+    setToken,
+    buttonRef: googleBtnContainerRef,
+  });
+
+  // 브라우저 최초 진입 및 컴포넌트 재생성 시 토큰 복원 (자동 로그인)
+  useEffect(() => {
+    const savedToken = localStorage.getItem("accessToken");
+    if (savedToken) {
+      setToken(savedToken);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!token) return;
+
+    const fetchPostIts = async () => {
+      setIsLoading(true);
+      try {
+        const data = await getPostIts(token, { filter, page: currentPage });
+        if (data.success) {
+          const fetchedList = data["post-its"] || [];
+          setPostIts(fetchedList);
+          const calculatedTotalPages = Math.ceil(data.count / data.pageSize) || 1;
+          setTotalPages(calculatedTotalPages);
+        } else {
+          console.error("포스트잇 목록 로드 실패");
+        }
+      } catch (error) {
+        console.error("API GET 요청 중 오류:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchPostIts();
+  }, [token, filter, currentPage]);
+
+  const handleFilterChange = () => {
+    setFilter(prev => (prev === "all" ? "mine" : "all"));
+    setCurrentPage(1);
+  };
+
+  // [핵심 인터랙션 함수] 클릭한 그리드 카드의 좌표를 따서 대형 포스트잇으로 변환
+  const handlePostItClick = (rect: DOMRect, post: PostIt, colorClass: string) => {
+    const blackboard = blackboardRef.current;
+    if (!blackboard) {
+      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}&ownerId=${post.user_id}`);
+      return;
+    }
+
+    const boardRect = blackboard.getBoundingClientRect();
+
+    setZoomedPostIt({
+      colorClass,
+      style: {
+        position: "fixed",
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        zIndex: 50,
+        transition: "all 800ms cubic-bezier(0.16, 1, 0.3, 1)",
+      },
+    });
+
+    setTimeout(() => {
+      setZoomedPostIt((prev) => {
+        if (!prev) return null;
+        return {
+          ...prev,
+          style: {
+            ...prev.style,
+            top: `${boardRect.top + 32}px`,
+            left: `${boardRect.left + 32}px`,
+            width: `${boardRect.width - 64}px`,
+            height: `${boardRect.height - 64}px`,
+            borderRadius: "0.5rem",
+          },
+        };
+      });
+    }, 20);
+
+    setTimeout(() => {
+      router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}&ownerId=${post.user_id}`);
+    }, 820);
+  };
+
+  if (!token) {
+    return (
+      <>
+        <Script
+          src="https://accounts.google.com/gsi/client"
+          strategy="afterInteractive"
+          onLoad={initializeGoogleSignIn}
         />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the page.tsx file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={16}
+        <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-4 select-none">
+          <MainPostIt ref={googleBtnContainerRef} />
+        </main>
+      </>
+    );
+  }
+
+  return (
+    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
+      {/* 트랜지션 애니메이션 오버레이 렌더링 구역 */}
+      <ZoomedPostItOverlay data={zoomedPostIt} />
+
+      <CommonButton
+        onClick={() => { localStorage.removeItem("accessToken"); setToken(null); setPostIts([]); }}
+        text="← 로그아웃"
+        className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
+      />
+
+      {/* 칠판 전체 프레임 */}
+      <ChalkboardFrame ref={blackboardRef}>
+        <Title
+          className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2"
+        >
+          <span className="text-white font-bold text-2xl tracking-wide">
+            ✏️ {filter === "all" ? "모두의 포스트잇" : "내 포스트잇"}
+          </span>
+        </Title>
+
+        <ChalkboardContent>
+          {/* 포스트잇 배치 그리드 2x8 */}
+          <GridPostIt>
+            {isLoading ? (
+              <Notice className="text-green-300 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center animate-pulse">
+                백엔드 통신 중...
+              </Notice>
+            ) : postIts && postIts.length > 0 ? (
+              postIts.map((post) => {
+                const colorClass = POSTIT_COLORS[post.id % POSTIT_COLORS.length];
+                return (
+                  <DashBoardPostIt
+                    key={post.id}
+                    post={post}
+                    colorClass={colorClass}
+                    onClick={(rect) => handlePostItClick(rect, post, colorClass)}
+                  />
+                );
+              })
+            ) : (
+              <Notice className="text-green-200/40 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center">
+                조회된 포스트잇이 없습니다
+              </Notice>
+            )}
+          </GridPostIt>
+
+          {/* 사이드 제어 바 */}
+          <SideController>
+            <PaginationFrame>
+              <PaginationButton
+                direction="up"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+              />
+              <PaginationNotice>
+                <p className="text-xs text-green-300 font-semibold uppercase">Page</p>
+                <p className="text-2xl font-black text-white tracking-widest mt-0.5">
+                  {currentPage} <span className="text-sm font-normal text-green-400">/</span> {totalPages}
+                </p>
+              </PaginationNotice>
+              <PaginationButton
+                direction="down"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+              />
+            </PaginationFrame>
+
+            <FilterButton
+              onClick={handleFilterChange}
+              variant={filter === "mine" ? "active" : "default"}
+              text={filter === "all" ? "내 포스트잇 보기" : "모두의 포스트잇 보기"}
             />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
+          </SideController>
+        </ChalkboardContent>
+      </ChalkboardFrame>
+    </main>
   );
 }
