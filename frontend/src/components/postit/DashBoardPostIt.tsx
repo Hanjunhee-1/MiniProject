@@ -34,7 +34,7 @@ export default function DashBoardPostIt({ post, colorClass = "", onClick }: Dash
                 {/* 콘텐츠 상단 영역 */}
                 <div className="p-1">
                     <div className="text-sm font-black text-slate-800 tracking-wide break-all">
-                        {post.user_name || "Unknown"}'s Board
+                        {post.user_name || "Unknown"}의 포스트잇
                     </div>
                     <div className="w-full h-[1px] bg-slate-800/10 my-2" />
 
