@@ -9,10 +9,20 @@ import MainPostIt from "@/components/postit/MainPostIt";
 import { getPostIts } from "@/api/postIts";
 
 import { PostIt } from "@/types";
-import LogoutButton from "@/components/button/LogoutButton";
+import LogoutButton from "@/components/button/CommonButton";
 import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
+import Title from "@/components/common/Title";
+import ChalkboardFrame from "@/components/dashboard/ChalkboardFrame";
+import ChalkboardContent from "@/components/dashboard/ChalkboardContent";
+import Notice from "@/components/common/Notice";
+import GridPostIt from "@/components/postit/GridPostIt";
+import SideController from "@/components/common/SideController";
+import PaginationFrame from "@/components/common/PaginationFrame";
+import PaginationNotice from "@/components/common/PaginationNotice";
+import ZoomedPostItOverlay from "@/components/postit/ZoomedPostItOverlay";
+import CommonButton from "@/components/button/CommonButton";
 
 export default function Home() {
   const [token, setToken] = useState<string | null>(null);
@@ -139,56 +149,31 @@ export default function Home() {
   return (
     <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
       {/* 트랜지션 애니메이션 오버레이 렌더링 구역 */}
-      {zoomedPostIt && (
-        <>
-          <div className="fixed inset-0 bg-black/20 z-40 animate-in fade-in duration-500" />
-          <div
-            className={`shadow-2xl flex flex-col justify-between p-8 z-50 text-slate-800 ${zoomedPostIt.colorClass}`}
-            style={zoomedPostIt.style}
-          >
-            <div className="w-full flex flex-col h-full">
-              <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-black text-slate-800 tracking-wide">
-                  📌 Task Board
-                </h2>
-              </div>
-              <p className="text-xs text-slate-500 mt-1">포스트잇 고유 식별코드: 연동 중...</p>
-              <div className="w-full h-[1px] bg-slate-800/10 my-4" />
+      <ZoomedPostItOverlay data={zoomedPostIt} />
 
-              <div className="flex-1 border border-dashed border-slate-400/40 rounded bg-white/30 flex items-center justify-center">
-                <p className="text-sm font-semibold text-slate-500/80 animate-pulse">
-                  할 일 목록 리스트를 불러오고 있습니다...
-                </p>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-
-      <LogoutButton
+      <CommonButton
         onClick={() => { localStorage.removeItem("accessToken"); setToken(null); setPostIts([]); }}
         text="← 로그아웃"
         className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
       />
 
-      <div
-        ref={blackboardRef}
-        className="w-full max-w-6xl h-[80vh] bg-[#234733] border-8 border-amber-900 rounded-lg shadow-2xl flex flex-col justify-between p-8 relative"
-      >
-        <div className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2">
+      {/* 칠판 전체 프레임 */}
+      <ChalkboardFrame ref={blackboardRef}>
+        <Title
+          className="h-[10%] flex items-center justify-between border-b border-green-700 pb-2"
+        >
           <span className="text-white font-bold text-2xl tracking-wide">
             ✏️ {filter === "all" ? "모두의 포스트잇" : "내 포스트잇"}
           </span>
-          <span className="text-green-300 text-sm font-medium">현재 페이지: {currentPage} / {totalPages}</span>
-        </div>
+        </Title>
 
-        <div className="h-[85%] w-full flex gap-6 my-4">
-          {/* 포스트잇 배치 그리드 */}
-          <div className="w-3/4 h-full grid grid-cols-4 grid-rows-2 gap-4 border border-dashed border-green-800/40 rounded-md p-4 items-center justify-items-center bg-black/5">
+        <ChalkboardContent>
+          {/* 포스트잇 배치 그리드 2x8 */}
+          <GridPostIt>
             {isLoading ? (
-              <div className="text-green-300 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center animate-pulse">
+              <Notice className="text-green-300 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center animate-pulse">
                 백엔드 통신 중...
-              </div>
+              </Notice>
             ) : postIts && postIts.length > 0 ? (
               postIts.map((post) => {
                 const colorClass = POSTIT_COLORS[post.id % POSTIT_COLORS.length];
@@ -202,41 +187,41 @@ export default function Home() {
                 );
               })
             ) : (
-              <div className="text-green-200/40 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center">
-                조회된 포스트잇이 없습니다.
-              </div>
+              <Notice className="text-green-200/40 text-sm font-bold col-span-4 row-span-2 flex items-center justify-center">
+                조회된 포스트잇이 없습니다
+              </Notice>
             )}
-          </div>
+          </GridPostIt>
 
           {/* 사이드 제어 바 */}
-          <div className="w-1/4 h-full flex flex-col items-center justify-between border-l border-green-700/50 pl-4">
-            <div className="flex flex-col items-center gap-6 mt-4">
+          <SideController>
+            <PaginationFrame>
               <PaginationButton
                 direction="up"
                 onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                 disabled={currentPage === 1}
               />
-              <div className="text-center bg-green-900/40 border border-green-700/60 px-4 py-2 rounded-md min-w-[100px]">
+              <PaginationNotice>
                 <p className="text-xs text-green-300 font-semibold uppercase">Page</p>
                 <p className="text-2xl font-black text-white tracking-widest mt-0.5">
                   {currentPage} <span className="text-sm font-normal text-green-400">/</span> {totalPages}
                 </p>
-              </div>
+              </PaginationNotice>
               <PaginationButton
                 direction="down"
                 onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                 disabled={currentPage === totalPages}
               />
-            </div>
+            </PaginationFrame>
 
             <FilterButton
               onClick={handleFilterChange}
               variant={filter === "mine" ? "active" : "default"}
               text={filter === "all" ? "내 포스트잇 보기" : "모두의 포스트잇 보기"}
             />
-          </div>
-        </div>
-      </div>
+          </SideController>
+        </ChalkboardContent>
+      </ChalkboardFrame>
     </main>
   );
 }

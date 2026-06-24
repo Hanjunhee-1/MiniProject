@@ -1,12 +1,12 @@
 import BaseButton from "./BaseButton";
 
-type LogoutButtonProps = {
+type CommonButtonProps = {
     onClick: () => void;
     text?: string;
     className?: string;
 }
 
-export default function LogoutButton({ onClick, text, className }: LogoutButtonProps) {
+export default function CommonButton({ onClick, text, className }: CommonButtonProps) {
     return (
         <BaseButton
             onClick={onClick}
@@ -14,7 +14,7 @@ export default function LogoutButton({ onClick, text, className }: LogoutButtonP
             size="sm"
             className={className}
         >
-            {text || "← 로그아웃"}
+            {text}
         </BaseButton>
     );
 }
