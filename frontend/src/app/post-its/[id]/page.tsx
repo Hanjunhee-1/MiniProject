@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { ChangeEvent, useEffect, useState } from "react";
 import { getTodosByPostItId, createTodo, deleteTodo, completeTodo } from "@/api/postIts";
 import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
@@ -19,6 +19,8 @@ import TodoListContents from "@/components/todo/TodoListContents";
 import TodoListBody from "@/components/todo/TodoListBody";
 import TodoRow from "@/components/todo/TodoRow";
 import CheckBox from "@/components/button/CheckBox";
+import TodoTextArea from "@/components/todo/TodoTextArea";
+import DatePicker from "@/components/common/DatePicker";
 
 export default function PostItDetailPage() {
   const params = useParams();
@@ -226,14 +228,6 @@ export default function PostItDetailPage() {
                     return (
                       <TodoRow key={todo.id}>
                         <td className="p-3">
-                          {/* <input
-                            type="checkbox"
-                            checked={isCompleted}
-                            // 완료되었거나 본인 소유가 아니라면 체크박스 비활성화
-                            disabled={isCompleted || !isOwner}
-                            onChange={() => handleToggleComplete(todo.id, isCompleted)}
-                            className="w-4 h-4 accent-green-700 cursor-pointer disabled:cursor-not-allowed"
-                          /> */}
                           <CheckBox
                             checked={isCompleted}
                             disabled={isCompleted || !isOwner}
@@ -278,44 +272,35 @@ export default function PostItDetailPage() {
 
                   {/* ➕ 인라인 TODO 생성 로우 추가 구역 */}
                   {isCreating && isOwner && (
-                    <tr className="bg-white/60 border-b border-green-200 text-center animate-in fade-in slide-in-from-top-1 duration-200">
+                    <TodoRow className="bg-white/60 border-b border-green-200 text-center animate-in fade-in slide-in-from-top-1 duration-200">
                       <td className="p-3">
-                        <input type="checkbox" disabled className="w-4 h-4 opacity-40" />
+                        <CheckBox checked={false} disabled={true} onChange={() => { }} className="w-4 h-4 opacity-40" />
                       </td>
                       <td className="p-2 text-left">
-                        <textarea
-                          placeholder="새로운 할 일을 입력하세요... (Enter: 저장, Shift+Enter: 줄바꿈)"
+                        <TodoTextArea
                           value={newContent}
-                          onChange={(e) => setNewContent(e.target.value)}
+                          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewContent(e.target.value)}
                           onKeyDown={handleKeyDown}
                           rows={2}
-                          className="w-full bg-white/90 border border-slate-300 rounded px-2 py-1 text-xs font-bold outline-none focus:border-slate-500 resize-none"
-                          autoFocus
                         />
                       </td>
                       <td className="p-3 text-slate-400 text-xs font-mono">—</td>
                       <td className="p-3 text-slate-400 text-xs font-mono">Today</td>
                       <td className="p-3 text-slate-400 text-xs font-mono">—</td>
                       <td className="p-2">
-                        <input
-                          type="date"
+                        <DatePicker
                           value={dueDate}
                           min={getTodayString()}
-                          onChange={(e) => setDueDate(e.target.value)}
-                          className="w-full bg-white/90 border border-slate-300 rounded p-1 text-[11px] font-mono outline-none"
+                          onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
                         />
                       </td>
                       <td className="p-3">
-                        <div className="flex flex-col sm:flex-row justify-center items-center gap-2">
-                          <button onClick={() => handleCreateTodo()} className="text-green-600 hover:text-green-800 font-bold text-xs bg-green-50 px-2 py-1 rounded border border-green-200 shadow-sm w-full sm:w-auto">
-                            확인
-                          </button>
-                          <button onClick={() => setIsCreating(false)} className="text-slate-500 hover:text-slate-700 text-xs bg-slate-50 px-2 py-1 rounded border border-slate-200 shadow-sm w-full sm:w-auto">
-                            취소
-                          </button>
+                        <div className="flex gap-2">
+                          <CommonButton onClick={() => handleCreateTodo()} text="✅" className="w-4 flex-1 bg-green-50 hover:bg-green-100 text-xs px-2 py-1 rounded border border-green-200 shadow-sm" />
+                          <CommonButton onClick={() => setIsCreating(false)} text="❌" className="w-4 flex-1 bg-slate-50 hover:bg-slate-100 text-xs px-2 py-1 rounded border border-slate-200 shadow-sm" />
                         </div>
                       </td>
-                    </tr>
+                    </TodoRow>
                   )}
                 </TodoListBody>
               </TodoListContents>
@@ -330,7 +315,7 @@ export default function PostItDetailPage() {
           {/* 하단 제어 바 */}
           <BottomController>
             <p className="text-[11px] text-slate-600 font-medium">
-              💡 완료된 할 일 행의 글자에 마우스를 올리면 정확한 완료 일시가 표시됩니다.
+              💡 완료된 할 일에 마우스를 올리면 정확한 완료 일시가 표시됩니다.
             </p>
             {/* 본인 소유일 때만 생성 단추 노출 */}
             {!isCreating && isOwner && (
