@@ -27,6 +27,9 @@ const gaegu = Gaegu({
 export const metadata: Metadata = {
   title: "Chalkboard Todo Post-its",
   description: "Manage your todos on a beautiful chalkboard post-it board.",
+  icons: {
+    icon: "favicon.png",
+  }
 };
 
 export default function RootLayout({
