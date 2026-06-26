@@ -2,7 +2,7 @@
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { ChangeEvent, useEffect, useState } from "react";
-import { getTodosByPostItId, createTodo, deleteTodo, completeTodo } from "@/api/postIts";
+import { getTodosByPostItId, createTodo, deleteTodo, updateTodo } from "@/api/postIts";
 import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
 import CommonButton from "@/components/button/CommonButton";
@@ -139,8 +139,6 @@ export default function PostItDetailPage() {
 
   // 3. TODO 완료 토글 처리 (PATCH)
   const handleToggleComplete = async (todoId: number, currentStatus: boolean) => {
-    if (currentStatus) return;
-
     // 타인 포스트잇 완료 수정 방어
     if (!isOwner) return;
 
@@ -148,7 +146,7 @@ export default function PostItDetailPage() {
     if (!token) return;
 
     try {
-      const data = await completeTodo(token, { postId: Number(postId), todoId });
+      const data = await updateTodo(token, { postId: Number(postId), todoId }, { isCompleted: !currentStatus });
       if (data.success) {
         const updatedTodo = (data as any).todo || data.todos;
         if (updatedTodo && !Array.isArray(updatedTodo)) {
@@ -230,7 +228,7 @@ export default function PostItDetailPage() {
                         <td className="p-3">
                           <CheckBox
                             checked={isCompleted}
-                            disabled={isCompleted || !isOwner}
+                            disabled={!isOwner}
                             onChange={() => handleToggleComplete(todo.id, isCompleted)}
                           />
                         </td>
