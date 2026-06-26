@@ -8,7 +8,7 @@ export default function TodoListFrame({ children, className }: TodoListFrameProp
         <div className={
             className
                 ? className
-                : `flex-1 overflow-y-auto bg-white/40 rounded border border-slate-200/60 my-5`
+                : `flex-1 overflow-y-auto bg-white/40 rounded border border-slate-200/60 my-5 p-2 md:p-0 [scrollbar-width:thin] [-webkit-overflow-scrolling:touch]`
         }>
             {children}
         </div>

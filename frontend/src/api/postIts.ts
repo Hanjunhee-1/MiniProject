@@ -1,4 +1,4 @@
-import { CommonMutationResponse, CreateTodoRequest, GetPostItsQuery, PostItPathParams, PostItsFetchResponse, SingleTodoResponse, TodoListResponse, TodoPathParams } from "@/types";
+import { CommonMutationResponse, CreateTodoRequest, PostItPathParams, PostItsFetchResponse, SingleTodoResponse, TodoListResponse, TodoPathParams, UpdateTodoRequest } from "@/types";
 import { apiFetch } from "./client";
 
 export const getPostIts = async (
@@ -54,13 +54,14 @@ export const deleteTodo = async (
     });
 };
 
-export const completeTodo = async (
+export const updateTodo = async (
     token: string,
-    params: TodoPathParams
+    params: TodoPathParams,
+    body: UpdateTodoRequest
 ): Promise<SingleTodoResponse> => {
     return apiFetch(`/post-its/${params.postId}/todos/${params.todoId}`, {
         method: "PATCH",
         token,
-        body: JSON.stringify({ isCompleted: true }),
+        body: JSON.stringify(body),
     });
 };

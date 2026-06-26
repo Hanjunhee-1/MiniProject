@@ -47,11 +47,6 @@ export interface SingleTodoResponse {
  * 백엔드 요청 규격
  */
 
-export interface GetPostItsQuery {
-    filter?: "mine" | null;
-    page: number;
-}
-
 export interface PostItPathParams {
     postId: number;
 }
@@ -66,6 +61,6 @@ export interface CreateTodoRequest {
     due_date: string | null;
 }
 
-export interface CompleteTodoRequest {
+export interface UpdateTodoRequest {
     isCompleted: boolean;
 }
