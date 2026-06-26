@@ -80,13 +80,13 @@ const postController = {
         }
     },
 
-    async completeTodo(req, res) {
+    async updateTodo(req, res) {
         try {
             const { postId, todoId } = req.params;
             const { isCompleted } = req.body;
             const { id: user_id } = req.user;
 
-            const todo = await postService.completeTodo(postId, todoId, isCompleted, user_id);
+            const todo = await postService.updateTodo(postId, todoId, isCompleted, user_id);
             if (todo) {
                 res.status(200).json({
                     success: true,
