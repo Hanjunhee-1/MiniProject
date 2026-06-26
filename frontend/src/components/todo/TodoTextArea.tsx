@@ -6,6 +6,7 @@ type TodoTextAreaProps = {
     onChange?: (e: ChangeEvent<HTMLTextAreaElement>) => void;
     onKeyDown?: (e: KeyboardEvent<HTMLTextAreaElement>) => void;
     value?: string;
+    placeholder?: string;
 }
 
 export default function TodoTextArea({
@@ -13,7 +14,8 @@ export default function TodoTextArea({
     rows,
     onChange,
     onKeyDown,
-    value
+    value,
+    placeholder
 }: TodoTextAreaProps) {
     return (
         <textarea
@@ -27,7 +29,7 @@ export default function TodoTextArea({
             onKeyDown={onKeyDown}
             value={value}
             autoFocus={true}
-            placeholder="새로운 할 일을 입력하세요... (Enter: 저장, Shift+Enter: 줄바꿈)"
+            placeholder={placeholder || "새로운 할 일을 입력하세요... (Enter: 저장, Shift+Enter: 줄바꿈)"}
         />
     )
 }
