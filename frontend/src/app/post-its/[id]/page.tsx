@@ -196,7 +196,10 @@ export default function PostItDetailPage() {
       <CommonButton
         onClick={() => router.push("/")}
         text="← 칠판 대시보드로 돌아가기"
-        className="absolute top-4 left-4 bg-white/80 hover:bg-white text-xs px-3 py-1.5 rounded-md shadow-sm text-slate-700 font-medium"
+        className="
+        relative w-full mb-4 justify-center text-center bg-white/80 hover:bg-white text-xs px-3 py-2.5 rounded-md shadow-sm text-slate-700 font-medium
+        md:absolute md:top-4 md:left-4 md:w-auto md:mb-0 md:py-1.5
+      "
       />
 
       {/* 칠판 전체 프레임 */}
