@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams, useRouter, useSearchParams } from "next/navigation";
-import { ChangeEvent, useEffect, useState } from "react";
+import { ChangeEvent, Fragment, useEffect, useState } from "react";
 import { getTodosByPostItId, createTodo, deleteTodo, updateTodo } from "@/api/postIts";
 import { Todo } from "@/types";
 import { getMe } from "@/api/auth";
@@ -21,6 +21,7 @@ import TodoRow from "@/components/todo/TodoRow";
 import CheckBox from "@/components/button/CheckBox";
 import TodoTextArea from "@/components/todo/TodoTextArea";
 import DatePicker from "@/components/common/DatePicker";
+import MobileMetadata from "@/components/todo/MobileMetadata";
 
 export default function PostItDetailPage() {
   const params = useParams();
@@ -43,6 +44,9 @@ export default function PostItDetailPage() {
   const [isCreating, setIsCreating] = useState<boolean>(false);
   const [newContent, setNewContent] = useState<string>("");
   const [dueDate, setDueDate] = useState<string>("");
+
+  // 모바일에서 확장 메타데이터를 보여줄 선택된 Todo ID 관리 상태
+  const [expandedTodoId, setExpandedTodoId] = useState<number | null>(null);
 
   // 최초 진입 시 로컬스토리지에서 유저 고유 ID 식별
   useEffect(() => {
@@ -190,30 +194,25 @@ export default function PostItDetailPage() {
     }
   };
 
+  // 모바일용 항목 클릭 토글 헬퍼 함수
+  const toggleExpandTodo = (todoId: number) => {
+    setExpandedTodoId((prev) => (prev === todoId ? null : todoId));
+  };
+
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
-      {/* 뒤로가기 */}
+    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-1 md:p-6 select-none">
       <CommonButton
         onClick={() => router.push("/")}
         text="← 칠판 대시보드로 돌아가기"
-        className="
-        relative w-full mb-4 justify-center text-center bg-white/80 hover:bg-white text-xs px-3 py-2.5 rounded-md shadow-sm text-slate-700 font-medium
-        md:absolute md:top-4 md:left-4 md:w-auto md:mb-0 md:py-1.5
-      "
+        className="relative w-full mb-4 justify-center text-center bg-white/80 hover:bg-white text-xs px-3 py-2.5 rounded-md shadow-sm text-slate-700 font-medium md:absolute md:top-4 md:left-4 md:w-auto md:mb-0 md:py-1.5"
       />
 
-      {/* 칠판 전체 프레임 */}
       <ChalkboardFrame>
-        <PostItContent className={`w-full h-full rounded-md shadow-inner p-8 flex flex-col justify-between ${postColor}`}>
-
-          {/* 상단: 타이틀 구역 */}
-          <Title
-            className="flex justify-between items-end border-b border-slate-300/60 pb-3"
-            text="📌 Task Board">
+        <PostItContent className={`w-full h-full rounded-md shadow-inner p-2 md:p-8 flex flex-col justify-between ${postColor}`}>
+          <Title className="flex justify-between items-end border-b border-slate-300/60 pb-3" text="📌 Task Board">
             <p className="text-xs text-slate-500 mt-1">포스트잇 고유 식별코드: No.{postId}</p>
           </Title>
 
-          {/* 테이블 영역 */}
           <TodoListFrame>
             {isLoading ? (
               <Notice className="w-full h-full flex items-center justify-center text-slate-500 font-semibold animate-pulse">
@@ -225,81 +224,106 @@ export default function PostItDetailPage() {
                 <TodoListBody>
                   {todos.map((todo) => {
                     const isCompleted = !!todo.completed_at;
+                    const isExpanded = expandedTodoId === todo.id;
 
                     return (
-                      <TodoRow key={todo.id}>
-                        <td className="p-3">
-                          <CheckBox
-                            checked={isCompleted}
-                            disabled={!isOwner}
-                            onChange={() => handleToggleComplete(todo.id, isCompleted)}
-                          />
-                        </td>
-                        <td className="p-3 text-left font-bold tracking-tight relative group/content whitespace-pre-wrap break-all">
-                          <span className={isCompleted ? "line-through text-slate-400" : "text-slate-800"}>
-                            {todo.content}
-                          </span>
-                          {isCompleted && todo.completed_at && (
-                            <div className="absolute left-4 -top-6 hidden group-hover/content:block bg-slate-800 text-white text-[10px] px-2 py-1 rounded shadow-md z-30 pointer-events-none whitespace-nowrap">
-                              완료일: {new Date(todo.completed_at).toLocaleString()}
-                            </div>
-                          )}
-                        </td>
-                        <td className="p-3 text-slate-600 font-mono text-xs">
-                          {todo.elapsed_date !== null ? `${todo.elapsed_date}일` : "—"}
-                        </td>
-                        <td className="p-3 text-slate-600 font-mono text-xs">
-                          {todo.created_at ? new Date(todo.created_at).toLocaleDateString() : "—"}
-                        </td>
-                        <td className="p-3 text-slate-600 font-mono text-xs">
-                          {todo.duration != null ? `${todo.duration}일` : "—"}
-                        </td>
-                        <td className="p-3 text-slate-600 font-mono text-xs">
-                          {todo.due_date ? new Date(todo.due_date).toLocaleDateString() : "—"}
-                        </td>
-                        <td className="p-3">
-                          {/* 본인 소유인 경우에만 삭제 버튼을 노출 */}
-                          {isOwner && (
-                            <DeleteButton
-                              onClick={() => handleDeleteTodo(todo.id)}
-                              className="w-4 h-4 text-red-500 hover:bg-red-100 font-bold text-base transform transition-all duration-300 hover:scale-125"
-                            >
-                              ❌
-                            </DeleteButton>
-                          )}
-                        </td>
-                      </TodoRow>
+                      <Fragment key={todo.id}>
+                        <TodoRow>
+                          {/* 1. 완료 체크박스 */}
+                          <td className="p-3 md:table-cell">
+                            <CheckBox
+                              checked={isCompleted}
+                              disabled={!isOwner}
+                              onChange={() => handleToggleComplete(todo.id, isCompleted)}
+                            />
+                          </td>
+
+                          {/* 2. 할 일 내용 - 클릭 시 모바일 상세창 토글 기능 연동 */}
+                          <td
+                            onClick={() => toggleExpandTodo(todo.id)}
+                            className="p-3 text-left font-bold tracking-tight relative group/content whitespace-pre-wrap break-all flex-1 md:table-cell cursor-pointer md:cursor-default"
+                          >
+                            <span className={isCompleted ? "line-through text-slate-400" : "text-slate-800"}>
+                              {todo.content}
+                            </span>
+
+                            {/* 데스크톱 마우스 오버 툴팁 */}
+                            {isCompleted && todo.completed_at && (
+                              <div className="absolute left-4 -top-6 hidden group-hover/content:block bg-slate-800 text-white text-[10px] px-2 py-1 rounded shadow-md z-30 pointer-events-none whitespace-nowrap">
+                                완료일: {new Date(todo.completed_at).toLocaleString()}
+                              </div>
+                            )}
+                          </td>
+
+                          {/* 데스크톱 전용 메타데이터 컬럼 */}
+                          <td className="hidden md:table-cell p-3 text-slate-600 font-mono text-xs">
+                            {todo.elapsed_date !== null ? `${todo.elapsed_date}일` : "—"}
+                          </td>
+                          <td className="hidden md:table-cell p-3 text-slate-600 font-mono text-xs">
+                            {todo.created_at ? new Date(todo.created_at).toLocaleDateString() : "—"}
+                          </td>
+                          <td className="hidden md:table-cell p-3 text-slate-600 font-mono text-xs">
+                            {todo.duration != null ? `${todo.duration}일` : "—"}
+                          </td>
+                          <td className="hidden md:table-cell p-3 text-slate-600 font-mono text-xs">
+                            {todo.due_date ? new Date(todo.due_date).toLocaleDateString() : "—"}
+                          </td>
+
+                          {/* 3. 삭제 제어 버튼 */}
+                          <td className="p-3 md:table-cell">
+                            {isOwner && (
+                              <DeleteButton
+                                onClick={() => handleDeleteTodo(todo.id)}
+                                className="w-4 h-4 text-red-500 hover:bg-red-100 font-bold text-base transform transition-all duration-300 hover:scale-125"
+                              >
+                                ❌
+                              </DeleteButton>
+                            )}
+                          </td>
+                        </TodoRow>
+
+                        {/* 4. 모바일 전용 메타데이터 카드식 드롭다운 */}
+                        {isExpanded && (
+                          <TodoRow className="block md:hidden bg-white/40 border-b border-dashed border-slate-300">
+                            <td colSpan={3} className="p-4 text-left">
+                              <MobileMetadata todo={todo} isCompleted={isCompleted} />
+                            </td>
+                          </TodoRow>
+                        )}
+                      </Fragment>
                     );
                   })}
 
                   {/* ➕ 인라인 TODO 생성 로우 추가 구역 */}
                   {isCreating && isOwner && (
-                    <TodoRow className="bg-white/60 border-b border-green-200 text-center animate-in fade-in slide-in-from-top-1 duration-200">
-                      <td className="p-3">
+                    <TodoRow className="bg-white/60 border-b border-green-200 text-center animate-in fade-in slide-in-from-top-1 duration-200 block md:table-row">
+                      <td className="p-3 hidden md:table-cell">
                         <CheckBox checked={false} disabled={true} onChange={() => { }} className="w-4 h-4 opacity-40" />
                       </td>
-                      <td className="p-2 text-left">
-                        <TodoTextArea
-                          value={newContent}
-                          onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewContent(e.target.value)}
-                          onKeyDown={handleKeyDown}
-                          rows={2}
-                        />
+                      <td className="p-2 text-left block md:table-cell">
+                        <TodoTextArea value={newContent} onChange={(e: ChangeEvent<HTMLTextAreaElement>) => setNewContent(e.target.value)} onKeyDown={handleKeyDown} rows={2} />
                       </td>
-                      <td className="p-3 text-slate-400 text-xs font-mono">—</td>
-                      <td className="p-3 text-slate-400 text-xs font-mono">Today</td>
-                      <td className="p-3 text-slate-400 text-xs font-mono">—</td>
-                      <td className="p-2">
-                        <DatePicker
-                          value={dueDate}
-                          min={getTodayString()}
-                          onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)}
-                        />
+                      <td className="p-3 text-slate-400 text-xs font-mono hidden md:table-cell">—</td>
+                      <td className="p-3 text-slate-400 text-xs font-mono hidden md:table-cell">Today</td>
+                      <td className="p-3 text-slate-400 text-xs font-mono hidden md:table-cell">—</td>
+                      <td className="p-2 block md:table-cell text-left md:text-center">
+                        <div className="block md:hidden relative">
+                          <div className="w-full bg-white border border-slate-300 rounded p-1.5 text-xs text-slate-700 flex justify-between items-center shadow-sm">
+                            <span>{dueDate ? dueDate : "연도 - 월 - 일"}</span>
+                            <span>📅</span>
+                          </div>
+                          <div className="absolute inset-0 opacity-0 w-full h-full cursor-pointer z-10">
+                            <DatePicker value={dueDate} min={getTodayString()} onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)} className="w-full h-full absolute inset-0 opacity-0 cursor-pointer" />
+                          </div>
+                        </div>
+                        <div className="hidden md:block">
+                          <DatePicker value={dueDate} min={getTodayString()} onChange={(e: ChangeEvent<HTMLInputElement>) => setDueDate(e.target.value)} />
+                        </div>
                       </td>
-                      <td className="p-3">
-                        <div className="flex gap-2">
-                          <CommonButton onClick={() => handleCreateTodo()} text="✅" className="w-4 flex-1 bg-green-50 hover:bg-green-100 text-xs px-2 py-1 rounded border border-green-200 shadow-sm" />
-                          <CommonButton onClick={() => setIsCreating(false)} text="❌" className="w-4 flex-1 bg-slate-50 hover:bg-slate-100 text-xs px-2 py-1 rounded border border-slate-200 shadow-sm" />
+                      <td className="p-3 block md:table-cell">
+                        <div className="flex gap-2 max-w-[200px] md:max-w-none">
+                          <CommonButton onClick={() => handleCreateTodo()} text="✅" className="w-4 flex-1 bg-green-50 hover:bg-green-100 text-xs px-2 py-2 md:py-1 rounded border border-green-200 shadow-sm" />
+                          <CommonButton onClick={() => setIsCreating(false)} text="❌" className="w-4 flex-1 bg-slate-50 hover:bg-slate-100 text-xs px-2 py-2 md:py-1 rounded border border-slate-200 shadow-sm" />
                         </div>
                       </td>
                     </TodoRow>
@@ -314,12 +338,12 @@ export default function PostItDetailPage() {
             )}
           </TodoListFrame>
 
-          {/* 하단 제어 바 */}
+          {/* 하단 제어 바 및 보정된 반응형 안내 문구 */}
           <BottomController>
             <p className="text-[11px] text-slate-600 font-medium">
-              💡 완료된 할 일에 마우스를 올리면 정확한 완료 일시가 표시됩니다.
+              <span className="inline md:hidden">💡 할 일 내용을 터치하면 상세 메타데이터(경과일, 기한 등)를 확인할 수 있습니다.</span>
+              <span className="hidden md:inline">💡 완료된 할 일에 마우스를 올리면 정확한 완료 일시가 표시됩니다.</span>
             </p>
-            {/* 본인 소유일 때만 생성 단추 노출 */}
             {!isCreating && isOwner && (
               <CreateButton onClick={() => setIsCreating(true)}>
                 <span>➕</span> TODO 생성하기

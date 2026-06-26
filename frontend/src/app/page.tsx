@@ -146,7 +146,7 @@ function Home() {
   }
 
   return (
-    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-6 select-none">
+    <main className="min-h-screen w-full flex flex-col items-center justify-center bg-[#EEDCB3] p-1 md:p-6 select-none">
       {/* 트랜지션 애니메이션 오버레이 렌더링 구역 */}
       <ZoomedPostItOverlay data={zoomedPostIt} />
 
