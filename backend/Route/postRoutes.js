@@ -11,7 +11,7 @@ router.get("/", authMiddleware, postController.getPostIts);
 router.get("/:postId", authMiddleware, postController.getTodos);
 router.post("/:postId", authMiddleware, postController.createTodo);
 router.delete("/:postId/todos/:todoId", authMiddleware, postController.deleteTodo);
-router.patch("/:postId/todos/:todoId", authMiddleware, postController.completeTodo);
+router.patch("/:postId/todos/:todoId", authMiddleware, postController.updateTodo);
 
 
 module.exports = router;
