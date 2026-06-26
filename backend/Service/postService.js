@@ -1,6 +1,7 @@
 const postRepository = require("../Repository/postRepository");
 const todoRepository = require("../Repository/todoRepository");
 const postItTodoRepository = require("../Repository/postItTodoRepository");
+const { updateTodo } = require("../Controller/postController");
 
 const postService = {
     async getPostIts(user_id, page = 1, filter) {
@@ -63,7 +64,7 @@ const postService = {
         return true;
     },
 
-    async completeTodo(post_it_id, todo_id, isCompleted, user_id) {
+    async updateTodo(post_it_id, todo_id, isCompleted, user_id) {
         const post_it = await postRepository.findById(post_it_id);
         if (!post_it || Number(post_it.user_id) !== Number(user_id)) {
             return null;
