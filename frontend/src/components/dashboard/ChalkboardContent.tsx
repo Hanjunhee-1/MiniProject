@@ -8,7 +8,7 @@ export default function ChalkboardContent({ children, className }: ChalkboardCon
         <div className={
             className
                 ? className
-                : `h-[85%] w-full flex gap-6 my-4`
+                : `h-auto md:h-[85%] w-full flex flex-col md:flex-row gap-6 my-4` 
         }>
             {children}
         </div>

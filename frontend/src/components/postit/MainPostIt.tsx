@@ -18,7 +18,11 @@ const MainPostIt = forwardRef<HTMLDivElement, MainPostItProps>(({ className }, r
             {/* 안내 문구 구역 */}
             <div className="absolute inset-0 flex items-center justify-center pb-12">
                 <p className="font-medium text-slate-600 text-sm animate-pulse group-hover:opacity-0 transition-opacity duration-200">
-                    hover to login ➔
+                    {/* 모바일(기본값)에서는 click 문구를 보여주고 md 이상(PC)에서 숨깁니다. */}
+                    <span className="inline md:hidden">click to login ➔</span>
+
+                    {/* 모바일에서는 hover 문구를 숨기고 md 이상(PC)에서만 노출합니다. */}
+                    <span className="hidden md:inline">hover to login ➔</span>
                 </p>
             </div>
 
