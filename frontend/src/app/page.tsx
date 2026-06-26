@@ -9,7 +9,6 @@ import MainPostIt from "@/components/postit/MainPostIt";
 import { getPostIts } from "@/api/postIts";
 
 import { PostIt } from "@/types";
-import LogoutButton from "@/components/button/CommonButton";
 import FilterButton from "@/components/button/FilterButton";
 import { useGoogleSignIn } from "@/hooks/useGoogleSignIn";
 import DashBoardPostIt from "@/components/postit/DashBoardPostIt";
@@ -87,8 +86,10 @@ export default function Home() {
   };
 
   // [핵심 인터랙션 함수] 클릭한 그리드 카드의 좌표를 따서 대형 포스트잇으로 변환
-  const handlePostItClick = (rect: DOMRect, post: PostIt, colorClass: string) => {
+  const handlePostItClick = (rect: DOMRect, post: PostIt) => {
     const blackboard = blackboardRef.current;
+
+    const colorClass = POSTIT_COLORS[post.user_id % POSTIT_COLORS.length];
     if (!blackboard) {
       router.push(`/post-its/${post.id}?color=${encodeURIComponent(colorClass)}&ownerId=${post.user_id}`);
       return;
@@ -176,13 +177,13 @@ export default function Home() {
               </Notice>
             ) : postIts && postIts.length > 0 ? (
               postIts.map((post) => {
-                const colorClass = POSTIT_COLORS[post.id % POSTIT_COLORS.length];
+                const colorClass = POSTIT_COLORS[post.user_id % POSTIT_COLORS.length];
                 return (
                   <DashBoardPostIt
                     key={post.id}
                     post={post}
                     colorClass={colorClass}
-                    onClick={(rect) => handlePostItClick(rect, post, colorClass)}
+                    onClick={(rect) => handlePostItClick(rect, post)}
                   />
                 );
               })
