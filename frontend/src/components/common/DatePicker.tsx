@@ -11,7 +11,7 @@ export default function DatePicker({
     value,
     min,
     onChange,
-    className
+    className,
 }: DatePickerProps) {
     return (
         <input
