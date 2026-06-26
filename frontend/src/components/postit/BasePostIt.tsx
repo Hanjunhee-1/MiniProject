@@ -3,17 +3,20 @@ type BasePostItProps = {
     colorClass?: string;
     className?: string;
     onClick?: () => void;
+    onTouchStart?: () => void;
 }
 
 export default function BasePostIt({
     children,
     colorClass = "bg-yellow-100 border-yellow-200 text-yellow-900",
     className = "",
-    onClick
+    onClick,
+    onTouchStart
 }: BasePostItProps) {
     return (
         <div
             onClick={onClick}
+            onTouchStart={onTouchStart}
             className={`
             relative 
             w-80 
