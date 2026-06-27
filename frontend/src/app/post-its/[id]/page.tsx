@@ -188,9 +188,23 @@ export default function PostItDetailPage() {
   };
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleCreateTodo();
+    // if (e.key === "Enter" && !e.shiftKey) {
+    //   e.preventDefault();
+    //   handleCreateTodo();
+    // }
+    if (e.key === "Enter") {
+      // 모바일 or PC
+      const isMobile = window.innerWidth < 768;
+
+      if (isMobile) {
+        return;
+      }
+
+      // PC 버전의 경우 Enter 입력 시 저장.
+      if (!e.shiftKey) {
+        e.preventDefault();
+        handleCreateTodo();
+      }
     }
   };
 
