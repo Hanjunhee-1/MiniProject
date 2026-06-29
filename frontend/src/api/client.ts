@@ -1,6 +1,6 @@
 // src/api/client.ts
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
-const API_PREFIX = "/api";
+const API_PREFIX = "/api/skku";
 
 interface CustomOptions extends RequestInit {
     token?: string | null;
