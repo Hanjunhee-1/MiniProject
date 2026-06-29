@@ -1,5 +1,6 @@
 // src/api/client.ts
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+const API_PREFIX = "/api";
 
 interface CustomOptions extends RequestInit {
     token?: string | null;
@@ -18,7 +19,7 @@ export const apiFetch = async (endpoint: string, options: CustomOptions = {}) =>
         headers["Authorization"] = `Bearer ${token}`;
     }
 
-    const res = await fetch(`${BASE_URL}${endpoint}`, {
+    const res = await fetch(`${BASE_URL}${API_PREFIX}${endpoint}`, {
         ...fetchOptions,
         headers,
     });
