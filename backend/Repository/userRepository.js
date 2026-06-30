@@ -9,7 +9,7 @@ const userRepository = {
             [name, email]
         );
         // 생성된 사용자를 객체로 리턴
-        return new User({ id: result.insertId, name, email });
+        return new User({ id: result.insertId, name, email, is_admin: 0 });
     },
 
     // 2. 이메일로 사용자 조회
@@ -36,6 +36,14 @@ const userRepository = {
     async findAll() {
         const [rows] = await pool.query(
             "SELECT * FROM users"
+        );
+        return rows.map(User.fromRow);
+    },
+
+    // 5. 관리자가 아닌 사용자만 조회
+    async findAllNonAdmin() {
+        const [rows] = await pool.query(
+            "SELECT * FROM users WHERE is_admin = 0"
         );
         return rows.map(User.fromRow);
     }

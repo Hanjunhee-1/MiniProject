@@ -22,8 +22,8 @@ const runElapsedDateScheduler = async () => {
 const runPostItScheduler = async () => {
     console.log("⏰ Running Post-It Scheduler");
 
-    // 모든 가입 사용자 조회
-    const users = await userRepository.findAll();
+    // 관리자가 아닌 가입 사용자만 조회
+    const users = await userRepository.findAllNonAdmin();
 
     const offset = 9 * 60 * 60 * 1000;
     const todayKst = new Date(Date.now() + offset);

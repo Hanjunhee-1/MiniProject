@@ -1,6 +1,7 @@
 const postRepository = require("../Repository/postRepository");
 const todoRepository = require("../Repository/todoRepository");
 const postItTodoRepository = require("../Repository/postItTodoRepository");
+const userRepository = require("../Repository/userRepository");
 const { updateTodo } = require("../Controller/postController");
 
 const postService = {
@@ -18,6 +19,12 @@ const postService = {
         const post_it = await postRepository.findById(post_it_id);
         if (!post_it) {
             console.log("not found post_it");
+            return null;
+        }
+
+        const owner = await userRepository.findById(post_it.user_id);
+        if (!owner || owner.is_admin === 1) {
+            console.log("not found post_it or admin owned");
             return null;
         }
 
