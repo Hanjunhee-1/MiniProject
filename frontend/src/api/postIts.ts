@@ -1,4 +1,4 @@
-import { CommonMutationResponse, CreateTodoRequest, PostItPathParams, PostItsFetchResponse, SingleTodoResponse, TodoListResponse, TodoPathParams, UpdateTodoRequest } from "@/types";
+import { CommonMutationResponse, CreateTodoRequest, PostIt, PostItPathParams, PostItsFetchResponse, SingleTodoResponse, TodoListResponse, TodoPathParams, UpdateTodoRequest } from "@/types";
 import { apiFetch } from "./client";
 
 export const getPostIts = async (
@@ -20,6 +20,29 @@ export const getPostIts = async (
         method: "GET",
         token,
     });
+};
+
+export const fetchAllPostIts = async (
+    token: string,
+    filter: "all" | "mine"
+): Promise<PostIt[]> => {
+    const all: PostIt[] = [];
+    let page = 1;
+    let totalCount = Infinity;
+
+    while (all.length < totalCount) {
+        const data = await getPostIts(token, { filter, page });
+        if (!data.success) break;
+
+        const items = data["post-its"] || [];
+        all.push(...items);
+        totalCount = data.count;
+
+        if (items.length === 0) break;
+        page++;
+    }
+
+    return all;
 };
 
 export const getTodosByPostItId = async (

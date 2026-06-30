@@ -64,3 +64,10 @@ export interface CreateTodoRequest {
 export interface UpdateTodoRequest {
     isCompleted: boolean;
 }
+
+export type DashboardMode = "all" | "mine" | "user";
+
+export interface DashboardUser {
+    id: number;
+    name: string;
+}

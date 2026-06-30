@@ -25,8 +25,9 @@ export default function DashBoardPostIt({ post, colorClass = "", onClick }: Dash
 
     return (
         /* BasePostIt 바깥을 div로 감싸고 ref를 걸어 실제 물리적 돔 위치를 고정 확보합니다. */
-        <div ref={containerRef} className="w-full h-full">
+        <div ref={containerRef} className="w-full h-full min-w-[72vw] sm:min-w-[45vw] md:min-w-0 snap-center shrink-0 md:shrink">
             <BasePostIt
+                variant="dashboard"
                 onClick={handleBaseClick}
                 colorClass={colorClass}
                 className="group relative overflow-hidden w-full h-full flex flex-col justify-between transform transition-all duration-300 hover:scale-105 group-hover:border-r-transparent group-hover:border-b-transparent"
