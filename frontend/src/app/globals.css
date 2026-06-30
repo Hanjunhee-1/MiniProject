@@ -157,3 +157,12 @@ body {
   font-family: var(--font-gaegu), var(--font-nanum-pen), cursive, sans-serif;
 }
 
+.scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.scrollbar-hide::-webkit-scrollbar {
+  display: none;
+}
+

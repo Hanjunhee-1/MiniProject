@@ -8,7 +8,7 @@ export default function GridPostIt({ children, className }: GridPostItProps) {
         <div className={
             className
                 ? className
-                : `w-full md:w-3/4 h-auto md:h-full grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 md:grid-rows-2 gap-4 border border-dashed border-green-800/40 rounded-md p-2 md:p-4 items-center justify-items-center bg-black/5`
+                : `w-full md:w-3/4 h-auto md:h-full flex md:grid overflow-x-auto md:overflow-visible snap-x snap-mandatory md:snap-none md:grid-cols-4 md:grid-rows-1 gap-3 md:gap-4 border border-dashed border-green-800/40 rounded-md p-2 md:p-4 items-stretch justify-items-center bg-black/5 scrollbar-hide`
         }>
             {children}
         </div>
