@@ -28,13 +28,17 @@ const postRepository = {
             JOIN users u
                 ON p.user_id = u.id
             WHERE p.user_id = ?
+                AND u.is_admin = 0
             ORDER BY p.created_at DESC
             LIMIT ? OFFSET ?
         `, [user_id, limit, offset]);
-        const [countRows] = await pool.query(
-            "SELECT COUNT(*) as count FROM post_its WHERE user_id = ?",
-            [user_id]
-        );
+        const [countRows] = await pool.query(`
+            SELECT COUNT(*) as count
+            FROM post_its p
+            JOIN users u ON p.user_id = u.id
+            WHERE p.user_id = ?
+                AND u.is_admin = 0
+        `, [user_id]);
         return {
             items: rows.map(Post_it.fromRow),
             count: countRows[0].count
@@ -50,12 +54,16 @@ const postRepository = {
             FROM post_its p
             JOIN users u
                 ON p.user_id = u.id
+            WHERE u.is_admin = 0
             ORDER BY p.created_at DESC
             LIMIT ? OFFSET ?
         `, [limit, offset]);
-        const [countRows] = await pool.query(
-            "SELECT COUNT(*) as count FROM post_its"
-        );
+        const [countRows] = await pool.query(`
+            SELECT COUNT(*) as count
+            FROM post_its p
+            JOIN users u ON p.user_id = u.id
+            WHERE u.is_admin = 0
+        `);
         return {
             items: rows.map(Post_it.fromRow),
             count: countRows[0].count

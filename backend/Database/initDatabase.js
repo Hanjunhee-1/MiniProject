@@ -18,7 +18,8 @@ async function initDatabase() {
         create table if not exists users (
             id int primary key auto_increment,
             name varchar(255) not null,
-            email varchar(255) not null unique
+            email varchar(255) not null unique,
+            is_admin tinyint(1) not null default 0
         )
     `);
 

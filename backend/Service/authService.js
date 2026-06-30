@@ -36,8 +36,11 @@ const authService = {
 
             /**
              * 최초 회원가입 시에 당일의 post-it 을 자동생성하는 로직.
+             * 관리자(is_admin=1)는 post-it을 생성하지 않음.
              */
-            const postit = await postRepository.create(user.id);
+            if (user.is_admin !== 1) {
+                await postRepository.create(user.id);
+            }
         }
 
         const token = jwt.sign(

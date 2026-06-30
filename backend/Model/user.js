@@ -1,8 +1,9 @@
 class User {
-    constructor({ id, name, email }) {
+    constructor({ id, name, email, is_admin = 0 }) {
         this.id = id;
         this.name = name;
         this.email = email;
+        this.is_admin = is_admin;
     }
 
     /**
@@ -13,7 +14,8 @@ class User {
         return new User({
             id: row.id,
             name: row.name,
-            email: row.email
+            email: row.email,
+            is_admin: Number(row.is_admin ?? 0)
         });
     }
 
@@ -25,7 +27,8 @@ class User {
         return {
             id: this.id,
             name: this.name,
-            email: this.email
+            email: this.email,
+            is_admin: this.is_admin
         };
     }
 }
